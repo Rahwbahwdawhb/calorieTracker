@@ -205,6 +205,7 @@ class foodContainerPanel(QWidget):
         self.foodDisplayPanel=foodDisplayPanel()
         self.foodDisplayPanel.foodListHolder.closeButton.clicked.connect(self.closeFoodDisplayPanel)
         self.foodDisplayPanel.foodItemHolder.closeButton.clicked.connect(self.closeFoodDisplayPanel)
+        self.foodDisplayPanel.foodMixHolder.closeButton.clicked.connect(self.closeFoodDisplayPanel)
         # foodContainerLayout.addWidget(self.foodDisplayPanel,0,0,0,0)
         # self.foodDisplayPanel.hide()
 
@@ -261,7 +262,7 @@ class foodDisplayPanel(QWidget):
         self.foodDisplayLayout=QStackedLayout()
         
         class displayWidgetCreator(QWidget):
-            def __init__(self,isFoodList):
+            def __init__(self,displayType):
                 super().__init__()
                 displayLayout=QGridLayout()
                 self.hierarcyScroll=QListWidget()
@@ -270,103 +271,159 @@ class foodDisplayPanel(QWidget):
                 hierarcyLayout.addWidget(self.hierarcyScroll)
                 self.closeButton=QPushButton('Food container list')    
                 self.displayLabel=QLabel('')    
-                displayLayout.addWidget(self.displayLabel,0,2)           
-                if isFoodList:
-                    self.constituentList=QTableWidget(self)
-                    self.constituentList.setSortingEnabled(True)
-                    self.constituentList.verticalHeader().setVisible(False)
-                    self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-                    self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-                    displayLayout.addLayout(hierarcyLayout,1,0,1,4)
-                    constituentListLayout=QVBoxLayout()
-                    constituentListLayout.addWidget(QLabel('Constituents:'))
-                    constituentListLayout.addWidget(self.constituentList)
-                    displayLayout.addLayout(constituentListLayout,2,0,8,4)
-                    displayLayout.addWidget(self.closeButton,10,0)
-                else:
-                    qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
-                    qtyLayout=QGridLayout()
-                    self.qtyLineEdits=[]
-                    for i,qtl in enumerate(qtyLabelNames):
-                        qtyLayout.addWidget(QLabel(qtl),0,i)
-                        qle_i=QLineEdit()
-                        self.qtyLineEdits.append(qle_i)
-                        qtyLayout.addWidget(qle_i,1,i)                    
-                    displayLayout.addLayout(qtyLayout,1,0,1,4)
-                    displayLayout.addLayout(hierarcyLayout,2,0,1,4)
-                    self.noteArea=QPlainTextEdit()
-                    noteAreaLayout=QVBoxLayout()
-                    noteAreaLayout.addWidget(QLabel('Notes:'))
-                    noteAreaLayout.addWidget(self.noteArea)
-                    displayLayout.addLayout(noteAreaLayout,3,0,7,4)
-                    displayLayout.addWidget(self.closeButton,10,0)
+                displayLayout.addWidget(self.displayLabel,0,2)    
+                match displayType:
+                    case 'foodContainer':
+                        self.constituentList=QTableWidget(self)
+                        self.constituentList.setSortingEnabled(True)
+                        self.constituentList.verticalHeader().setVisible(False)
+                        self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                        self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+                        displayLayout.addLayout(hierarcyLayout,1,0,1,4)
+                        constituentListLayout=QVBoxLayout()
+                        constituentListLayout.addWidget(QLabel('Foods:'))
+                        constituentListLayout.addWidget(self.constituentList)
+                        displayLayout.addLayout(constituentListLayout,2,0,8,4)
+                        displayLayout.addWidget(self.closeButton,10,0)
+                    case 'foodMix':
+                        self.constituentList=QTableWidget(self)
+                        self.constituentList.setSortingEnabled(True)
+                        self.constituentList.verticalHeader().setVisible(False)
+                        self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                        self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+                        qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
+                        qtyLayout=QGridLayout()
+                        self.qtyLineEdits=[]
+                        for i,qtl in enumerate(qtyLabelNames):
+                            qtyLayout.addWidget(QLabel(qtl),0,i)
+                            qle_i=QLineEdit()
+                            self.qtyLineEdits.append(qle_i)
+                            qtyLayout.addWidget(qle_i,1,i)                    
+                        displayLayout.addLayout(qtyLayout,1,0,1,4)
+                        displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                        self.noteArea=QPlainTextEdit()
+                        constituentListLayout=QVBoxLayout()
+                        constituentListLayout.addWidget(QLabel('Constituents:'))
+                        constituentListLayout.addWidget(self.constituentList)
+                        displayLayout.addLayout(constituentListLayout,3,0,7,4)
+                        displayLayout.addWidget(self.closeButton,10,0)
+                    case 'foodItem':
+                        qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
+                        qtyLayout=QGridLayout()
+                        self.qtyLineEdits=[]
+                        for i,qtl in enumerate(qtyLabelNames):
+                            qtyLayout.addWidget(QLabel(qtl),0,i)
+                            qle_i=QLineEdit()
+                            self.qtyLineEdits.append(qle_i)
+                            qtyLayout.addWidget(qle_i,1,i)                    
+                        displayLayout.addLayout(qtyLayout,1,0,1,4)
+                        displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                        self.noteArea=QPlainTextEdit()
+                        noteAreaLayout=QVBoxLayout()
+                        noteAreaLayout.addWidget(QLabel('Notes:'))
+                        noteAreaLayout.addWidget(self.noteArea)
+                        displayLayout.addLayout(noteAreaLayout,3,0,7,4)
+                        displayLayout.addWidget(self.closeButton,10,0)
                 for i in range(11):
                     displayLayout.setRowStretch(i,1)
                 displayLayout.setContentsMargins(0,0,0,0)
                 self.setLayout(displayLayout)
         
-        self.foodItemHolder=displayWidgetCreator(isFoodList=False)
-        self.foodItemHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)
-        self.foodListHolder=displayWidgetCreator(isFoodList=True)        
-        self.foodListHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)
-        
+        self.foodListHolder=displayWidgetCreator('foodContainer')        
+        self.foodListHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)      
+        self.foodMixHolder=displayWidgetCreator('foodMix')        
+        self.foodMixHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)      
+        self.foodItemHolder=displayWidgetCreator('foodItem')
+        self.foodItemHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)  
 
         self.foodDisplayLayout.addWidget(self.foodListHolder)
+        self.foodDisplayLayout.addWidget(self.foodMixHolder)
         self.foodDisplayLayout.addWidget(self.foodItemHolder)
         self.setLayout(self.foodDisplayLayout)
         self.foodDisplayLayout.setCurrentIndex(0)
+        self.activeDisplayType='foodContainer'
         # self.constituentList.itemClicked.connect(self.onClick)
         
         
         # self.constituentList.show()
-    def populatePanel(self,dataList,headers,panelTitle,isFoodList,clickList,notes=''):
+    def populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[]):
         self.clickList=clickList
+        self.activeDisplayType=displayType
         q=QFont()
         q.setBold(True)
-        if isFoodList:
-            self.foodDisplayLayout.setCurrentIndex(0)
-            self.foodListHolder.constituentList.setRowCount(0)
-            self.foodListHolder.constituentList.setColumnCount(0)
-            self.foodListHolder.constituentList.setRowCount(len(dataList))
-            self.foodListHolder.constituentList.setColumnCount(len(dataList[0]))
-            self.foodListHolder.constituentList.setColumnHidden(len(dataList[0])-1,True)
-            self.foodListHolder.displayLabel.setText(panelTitle)
-            
-            self.foodListHolder.hierarcyScroll.clear()
-            for prior in clickList[0:-1]:
-                self.foodListHolder.hierarcyScroll.addItem(QListWidgetItem(prior))
-            endItem=QListWidgetItem(clickList[-1])
-            endItem.setFont(q)
-            self.foodListHolder.hierarcyScroll.addItem(endItem)
-            self.foodListHolder.hierarcyScroll.scrollToBottom()
+        match displayType:
+            case 'foodContainer':
+                self.foodDisplayLayout.setCurrentIndex(0)
+                self.foodListHolder.constituentList.setRowCount(0)
+                self.foodListHolder.constituentList.setColumnCount(0)
+                self.foodListHolder.constituentList.setRowCount(len(dataList))
+                self.foodListHolder.constituentList.setColumnCount(len(dataList[0]))
+                self.foodListHolder.constituentList.setColumnHidden(len(dataList[0])-1,True)
+                self.foodListHolder.displayLabel.setText(panelTitle)
+                
+                self.foodListHolder.hierarcyScroll.clear()
+                for prior in clickList[0:-1]:
+                    self.foodListHolder.hierarcyScroll.addItem(QListWidgetItem(prior))
+                endItem=QListWidgetItem(clickList[-1])
+                endItem.setFont(q)
+                self.foodListHolder.hierarcyScroll.addItem(endItem)
+                self.foodListHolder.hierarcyScroll.scrollToBottom()
 
-            for i,subList in enumerate(dataList):
-                for ii,item in enumerate(subList):
-                    listItem=QTableWidgetItem(item)
-                    self.foodListHolder.constituentList.setItem(i,ii,listItem)
-            self.foodListHolder.constituentList.setHorizontalHeaderLabels(headers)
-        else:
-            self.foodDisplayLayout.setCurrentIndex(1)
-            self.foodItemHolder.displayLabel.setText(panelTitle)
-            self.foodItemHolder.noteArea.setPlainText(notes.replace('\\','\n'))
+                for i,subList in enumerate(dataList):
+                    for ii,item in enumerate(subList):
+                        listItem=QTableWidgetItem(item)
+                        self.foodListHolder.constituentList.setItem(i,ii,listItem)
+                self.foodListHolder.constituentList.setHorizontalHeaderLabels(headers)
+            case 'foodMix':
+                self.foodDisplayLayout.setCurrentIndex(1)
+                self.foodMixHolder.displayLabel.setText(panelTitle)
 
-            self.foodItemHolder.hierarcyScroll.clear()
-            for prior in clickList[0:-1]:
-                self.foodItemHolder.hierarcyScroll.addItem(QListWidgetItem(prior))
-            endItem=QListWidgetItem(clickList[-1])
-            endItem.setFont(q)
-            self.foodItemHolder.hierarcyScroll.addItem(endItem)
-            # self.foodItemHolder.hierarcyScroll.setItemda
-            # QFont
-            self.foodItemHolder.hierarcyScroll.scrollToBottom()
+                self.foodMixHolder.constituentList.setRowCount(0)
+                self.foodMixHolder.constituentList.setColumnCount(0)
+                self.foodMixHolder.constituentList.setRowCount(len(dataList))
+                self.foodMixHolder.constituentList.setColumnCount(len(dataList[0]))
+                self.foodMixHolder.constituentList.setColumnHidden(len(dataList[0])-1,True)
+                self.foodMixHolder.displayLabel.setText(panelTitle)
 
-            for i,qle in enumerate(self.foodItemHolder.qtyLineEdits):
-                qle.setText(str(dataList[i]))
+                self.foodMixHolder.hierarcyScroll.clear()
+                for prior in clickList[0:-1]:
+                    self.foodMixHolder.hierarcyScroll.addItem(QListWidgetItem(prior))
+                endItem=QListWidgetItem(clickList[-1])
+                endItem.setFont(q)
+                self.foodMixHolder.hierarcyScroll.addItem(endItem)
+                # self.foodItemHolder.hierarcyScroll.setItemda
+                # QFont
+                self.foodMixHolder.hierarcyScroll.scrollToBottom()
+                for i,subList in enumerate(dataList):
+                    for ii,item in enumerate(subList):
+                        listItem=QTableWidgetItem(item)
+                        self.foodMixHolder.constituentList.setItem(i,ii,listItem)
+                self.foodMixHolder.constituentList.setHorizontalHeaderLabels(headers)
+                for i,qle in enumerate(self.foodMixHolder.qtyLineEdits):
+                    qle.setText(str(dataList2[i]))
+            case 'foodItem':
+                self.foodDisplayLayout.setCurrentIndex(2)
+                self.foodItemHolder.displayLabel.setText(panelTitle)
+                self.foodItemHolder.noteArea.setPlainText(notes.replace('\\','\n'))
+
+                self.foodItemHolder.hierarcyScroll.clear()
+                for prior in clickList[0:-1]:
+                    self.foodItemHolder.hierarcyScroll.addItem(QListWidgetItem(prior))
+                endItem=QListWidgetItem(clickList[-1])
+                endItem.setFont(q)
+                self.foodItemHolder.hierarcyScroll.addItem(endItem)
+                # self.foodItemHolder.hierarcyScroll.setItemda
+                # QFont
+                self.foodItemHolder.hierarcyScroll.scrollToBottom()
+
+                for i,qle in enumerate(self.foodItemHolder.qtyLineEdits):
+                    qle.setText(str(dataList[i]))
     def hierarcyClick_external(self):
         pass
-    def external_onClick(self):
-        self.foodListHolder.constituentList.itemClicked.connect(self.externalFunction)
-    def externalFunction(self):
+    def tableItemClick_set(self):
+        self.foodListHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
+        self.foodMixHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
+    def tableItemClick_external(self):
         pass
     def onClick(self,item):
         self.constituentList.selectRow(item.row())

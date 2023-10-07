@@ -67,7 +67,7 @@ def extFCclicked_ext(self,item):
     # print(foodStack)
     clickList.append(foodContainerName)
     clickList_details.append(('foodContainer',''))
-    self.foodDisplayPanel.populatePanel(foodStack,foodAttributes,foodContainerName,True,clickList)
+    self.foodDisplayPanel.populatePanel(foodStack,foodAttributes,foodContainerName,'foodContainer',clickList)
     self.stackLayout.setCurrentIndex(1)
 def updateClickList(clickText,foodID):
     if clickText in clickList:
@@ -78,19 +78,23 @@ def updateClickList(clickText,foodID):
         clickList.append(clickText)
         clickList_details.append(('food',foodID))
 def onClick_ext(self,item):
-    self.foodListHolder.constituentList.selectRow(item.row())
-    foodID=self.foodListHolder.constituentList.item(item.row(),self.foodListHolder.constituentList.columnCount()-1).text()    
+    if self.activeDisplayType=='foodContainer':
+        self.foodListHolder.constituentList.selectRow(item.row())
+        foodID=self.foodListHolder.constituentList.item(item.row(),self.foodListHolder.constituentList.columnCount()-1).text()    
+    else:
+        self.foodMixHolder.constituentList.selectRow(item.row())
+        foodID=self.foodMixHolder.constituentList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()    
     updateClickList(item.text(),foodID)
-    rowStr=''
-    for i in range(5):
-        rowStr+=','+self.foodListHolder.constituentList.item(item.row(),i).text()
+    # rowStr=''
+    # for i in range(5):
+    #     rowStr+=','+self.foodListHolder.constituentList.item(item.row(),i).text()
     # print(rowStr)
     # print(self.constituentList.item(item.row(),self.constituentList.columnCount()-1).text())    
     foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
     if foodStack:
-        self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,True,clickList)
+        self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
     else:
-        self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,False,clickList,self.foodDict[foodID].notes)
+        self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
 def resetClickHistory(self):
     clickList.clear()
@@ -103,30 +107,29 @@ def hierarcyClick(self,item):
         foodStack=getFoodStack(fH_clicked_contents,self.foodDict)
         del clickList[1:]
         del clickList_details[1:]
-        self.populatePanel(foodStack,foodAttributes,foodContainerName,True,clickList)
+        self.populatePanel(foodStack,foodAttributes,foodContainerName,'foodContainer',clickList)
         print('foodContainer')
     else:
         foodID=clickList_details[hierarcyIndex][1]
         updateClickList(item.text(),foodID)
         foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
         if foodStack:
-            self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,True,clickList)
+            self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
         else:
-            self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,False,clickList,self.foodDict[foodID].notes)
+            self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
-foodDisplayPanel.externalFunction=onClick_ext
+foodDisplayPanel.tableItemClick_external=onClick_ext
 foodContainerPanel.resetClickHistory_external=resetClickHistory
 foodDisplayPanel.hierarcyClick_external=hierarcyClick
 #next up: 
-# makros av det klickat på efter foodContainer (nu endast för enstaka foodItems, ska även vara för ex combo -ska dock bara gå att editera qty av constituents ej makros direkt)
-# editera makros för foodItems samt spara de nya värdena, även i filerna där de ligger!
+# editera makros för foodItems (för foodMix ska dock bara gå att editera qty av constituents ej makros direkt) samt spara de nya värdena, även i filerna där de ligger!
 # add food
 # mix foods
 # döpa om duplicate names, memoization?, så ex. carrot bara kan svara mot en sorts makros
 
 app=frontendSetup()
 app.mW.foodContainerPanel.extFCclicked_set()
-app.mW.foodContainerPanel.foodDisplayPanel.external_onClick()
+app.mW.foodContainerPanel.foodDisplayPanel.tableItemClick_set()
 
 for f in listdir(loadDir):
     if f.endswith('.json'):
