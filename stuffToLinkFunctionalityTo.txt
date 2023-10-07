@@ -1,0 +1,22 @@
+addFoodPanel:
+self.nameEntry
+self.quantityLineEdits
+self.foodContainerScroll -scrollAreaWidget: self.entryField, self.scrollList
+self.addButton
+
+mixFoodPanel:
+self.nameEntry
+self.quantityStatLabels
+self.ingridientScroll
+self.ingridientAddScroll -scrollAreaWidget: self.entryField, self.scrollList
+self.addIngridientButton
+self.foodContainerScroll -scrollAreaWidget: self.entryField, self.scrollList
+self.addToFoodContainerButton
+self.noteArea
+self.addNoteButton
+
+foodContainerPanel:
+self.extScroll
+self.newFCentry
+self.newFCnote
+self.addButton

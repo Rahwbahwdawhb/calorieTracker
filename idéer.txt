@@ -1,0 +1,22 @@
+sorta foodItems efter namn, protein, carbs, kcal, fett...
+-samma för constituents
+varje foodItem kan ha notes å tags
+välj om sök på namn/tags
+visa förslag då söker
+
+dictionary med all inläst mat, så bara läser in samma info en gång?
+
+-läs bara in foodItems på rätt format, annars skippa
+-prompta namnkonflikter och visa jämförelser så kan välja vilken ska ha
+
+lista med foodContainers till vänster, höger visar stats för foodContainers/items som klickat på
+-kunna editera 
+-dedikerad knapp för att skapa ny foodItem
+
+knapp för att lägga till foodcontainer som visas t vänster
+ -funkar som foodItems men har egen fil-läses in i början
+
+kunna flytta foodContainer in i annan foodcontainer
+-lägger till innehåll i en fil i ny och tar bort första filen..visar då bara nya flik/fil
+ 
+

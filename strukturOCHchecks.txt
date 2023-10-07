@@ -1,0 +1,38 @@
+BACKEND
+
+kolla hur makros blir om lägger ihop foods som har constituents
+-kommer makros bara addera för totalsummor eller kommer de bli högre pga constituents också adderas in?
+kolla hur blir m changeQuantity för food utan constituents, food m constituents och food som är ihoplagd av food m constituents
+
+
+FRONTEND
+
+add food:
+skriv i food container att lägga i, få förslag i lista under
+-ska kunna lägga till
+self.addButton
+self.foodContainerScroll
+self.quantityLineEdits
+self.nameEntry
+
+mix foods:
+self.quantityStatLabels, ackumulerade makros
+self.ingridientScroll, ingredienser lagt till
+
+self.ingridientAddScroll, lista ingredienser kan lägga till
+self.addIngridientButton
+
+self.foodContainerScroll, lista över foodcontainers
+self.addToFoodContainerButton
+
+self.noteArea, skriv i notes om mat
+self.addNoteButton
+
+food containers:
+öppna infopanel om trycker på foodcontainer? öppna foodcontainer och se foods inuti...
+
+self.extScroll, lista m existerade foodcontainers
+
+self.newFCentry, namn för ny foodcontainer
+self.newFCnote, note t ny foodcontainer
+self.addButton
