@@ -1,46 +1,68 @@
 from json import loads, dumps
 from os.path import dirname, abspath, join
 from os import listdir
-from copy import copy
+from copy import copy, deepcopy
 
 def recursiveDump(foodIn):
-        if foodIn.constituents!=[]:
-            foodDict=foodIn.__dict__
+        foodDict=deepcopy(foodIn.__dict__)
+        if foodIn.constituents!=[]:            
             dumpList=[]
             for food in foodDict['constituents']:
                 foodDump_iter=recursiveDump(food)
                 dumpList.append(foodDump_iter)
-            foodIn.constituents=dumpList
-        foodDump=dumps(foodIn.__dict__)
+            foodDict['constituents']=dumpList
+            # foodIn.constituents=dumpList
+        foodDump=dumps(foodDict)
         foodDump=foodDump.replace('\\','')
         foodDump=foodDump.replace('"{','{')
         foodDump=foodDump.replace('}"','}')
         return foodDump
-def recursiveLoad(jsonIn):
+def recursiveLoad(jsonIn,allFoodDictionary,constituentOfDictionary):
     if type(jsonIn)==str:
         jsonDict=loads(jsonIn)
     else:
         jsonDict=jsonIn
-    if jsonDict['constituents']!=[]:
+    if jsonDict['constituents']!=[]:        
         foodList=[]
         for foodEntry in jsonDict['constituents']:
-            foodRetrieved=recursiveLoad(foodEntry)
+            foodRetrieved=recursiveLoad(foodEntry,allFoodDictionary,constituentOfDictionary)
+            if foodRetrieved.name not in constituentOfDictionary.keys():
+                constituentOfDictionary[foodRetrieved.name]=[]
+            constituentOfDictionary[foodRetrieved.name].append(jsonDict['name'])            
             foodList.append(foodRetrieved)
         # foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],constituents=[])
         jsonDict['constituents']=foodList
     #     foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'])        
     # else:
-    foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])
+    foodOut=newOrExistingFood(jsonDict,allFoodDictionary)
+    # foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])
     return foodOut
+def newOrExistingFood(jsonDict,allFoodDictionary):
+    food=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])    
+    if jsonDict['name'] not in allFoodDictionary.keys():
+        allFoodDictionary[jsonDict['name']]=food
+    else:
+        dumpStr_food=recursiveDump(food)
+        existingFood=allFoodDictionary[jsonDict['name']]
+        dumpStr_existingFood=recursiveDump(existingFood)
+        if dumpStr_food==dumpStr_existingFood:
+            food=existingFood
+        else:
+            newFoodName=food.name+'*'
+            food.name=newFoodName
+            allFoodDictionary[newFoodName]=food
+    return food
 
 class foodHolder:
-    def __init__(self,locationToSave=None,filename=str) -> None:
+    def __init__(self,locationToSave=None,filename=str,allFoodDictionary=dict,constituentOfDictionary=dict) -> None:
         self.name=filename
         if locationToSave==None:
             self.saveLocation=dirname(abspath(__file__))
         else:
             self.saveLocation=locationToSave
         self.foodList=[]
+        self.allFoodDictionary=allFoodDictionary
+        self.constituentOfDictionary=constituentOfDictionary
     def appendFoodFromFile(self,loadFolder,filename):
         if self.name+'.json'==filename: #read file contents and add to foodList
             with open(join(loadFolder,self.name+'.json'),'r') as f:                    
@@ -51,11 +73,17 @@ class foodHolder:
                         # for foodDict in rowDict['constituents']:
                         #     rowFood.constituents.append(foodItem(foodDict['name'],foodDict['quantity'],foodDict['kcal'],foodDict['protein'],foodDict['carbs'],foodDict['fat'],foodDict['fibers'],foodDict['constituents']))                                
                         # self.foodList.append(rowFood)
-                        rowFood=recursiveLoad(row)
+                        rowFood=recursiveLoad(row,self.allFoodDictionary,self.constituentOfDictionary)
                         self.foodList.append(rowFood)
                         #läs in constituents separat och skapa foodItems för dem, se till att funkar även med nestade..antagligen rekursiv funktion, kolla om bara behöver rekursiv funktion för att spara, modifiera json-string som får ut från nestade foodItems så tar bort "" mellan nya items i listan...
                     else:
-                        self.foodList.append(foodItem(rowDict['name'],rowDict['quantity'],rowDict['kcal'],rowDict['protein'],rowDict['carbs'],rowDict['fat'],rowDict['fibers'],rowDict['constituents'],rowDict['notes']))        
+                        newFoodItem=newOrExistingFood(rowDict,self.allFoodDictionary)
+                        # if rowDict['name'] not in self.allFoodDictionary.keys():
+                        #     newFoodItem=foodItem(rowDict['name'],rowDict['quantity'],rowDict['kcal'],rowDict['protein'],rowDict['carbs'],rowDict['fat'],rowDict['fibers'],rowDict['constituents'],rowDict['notes'])
+                        #     self.allFoodDictionary[rowDict['name']]=newFoodItem
+                        # else:
+                        #     newFoodItem=self.allFoodDictionary[rowDict['name']]
+                        self.foodList.append(newFoodItem)
     def addFood(self,food):
         self.foodList.append(food)
     def saveToFile(self):
@@ -78,6 +106,8 @@ class foodItem:
         self.kcal=kcal
         self.constituents=[]
         self.notes=notes
+        self.willBeUpdated=False
+        self.isConstituentOf=[]
         if constituents!=[]:
             fiberSum=0
             fiberInfoCounter=0
@@ -112,7 +142,7 @@ class foodItem:
         for constituent in self.constituents:
             constituent.showNutrients()
     def updateNote(self,noteStr):
-        self.bote=noteStr
+        self.notes=noteStr
     def changeQuantity(self,newQuantity):
         self.protein=self.protein*newQuantity/self.quantity
         self.carbs=self.carbs*newQuantity/self.quantity
@@ -123,6 +153,12 @@ class foodItem:
         for constituent in self.constituents:
             constituent.changeQuantity(newQuantity)
         self.quantity=newQuantity
+    def toBeUpdated(self):
+        self.willBeUpdated=True
+        for food in self.isConstituentOf:
+            food.toBeUpdated()
+    def assignConstituentOfList(self,constituentOfList):
+        self.isConstituentOf=constituentOfList
 
 def sortFoodList(foodListIn,sortBy,reverseBool):
     #reverseBool: false sorts in ascending order, true sorts in descending order

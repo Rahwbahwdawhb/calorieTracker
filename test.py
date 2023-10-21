@@ -9,12 +9,12 @@
 from backend import *
 
 
-
+allFoodDictionary=dict()
 beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
 chicken=foodItem('chicken',100,100,18,3,4,notes='CHICKEN\\yo!')
 carrot=foodItem('carrot',100,20,1,5,0.1,2,notes='healthy')
 cabbage=foodItem('cabbage',100,18,0.5,3,4,1,notes='yummy')
-meat=foodHolder(None,'meat')
+meat=foodHolder(None,'meat',allFoodDictionary)
 meat.addFood(beef)
 meat.addFood(chicken)
 meat.saveToFile()
@@ -28,7 +28,7 @@ combo2=copy(combo)
 combo3=foodItem(name='combo3',constituents=[combo2,carrot2])
 combo.showNutrients()
 combo.showNutrients_constituents()
-testi=foodHolder(filename='testi')
+testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
 # for food in testi.foodList:
 #     food.showNutrients()
 #     food.showNutrients_constituents()
@@ -121,6 +121,23 @@ foodContainerPanel.extFCclicked_external=extFCclicked_ext
 foodDisplayPanel.tableItemClick_external=onClick_ext
 foodContainerPanel.resetClickHistory_external=resetClickHistory
 foodDisplayPanel.hierarcyClick_external=hierarcyClick
+
+######################          FIXA DETTA          ############################################
+#läser in unika foodItems och länkar likadana som ingredienser mellan olika foods
+#lägger till * i slutet av namn på foodItem m samma namn men annorlunda makros
+#problem: qty är attribut av food, så om har 50 g beef i en och 100 g beef i en annan kommer dessa foodItems ses som olika även fast utgår från samma beef
+#->implementera separat foodItem klass som bara har /qty some attribut och separat mixFoodItem klass där har qty av constituents som attribut
+#-kommer behöva ändra om hur läser in foods i gui
+#-mindre ändringar i hur läser in och sparar mat i backend
+
+#inläsningsstruktur:
+#läs in som nu, alla foodItems läggs i dictionary: namn=nyckel, objekt=värde
+#-duplicate-namn spara namn i separat lista och skapa lista med de itemsen i dictionary, efter läst in alla loopa igenom lista och prompta användare om att ge unika namn
+#--då läser in constituents, kolla om finns med samma makros i dictionary och länka i sånt fall till det foodItem ist för att skapa nytt men fortsätt gå igenom nestade constituents, lägg till i dictonary om ej finns med
+#-ytterligare en dictionary med namn=nyckel, värde=lista m foodItems de ingår i 
+#--då uppdaterar värde i gui, ändra makron i foodItem och kör sen uppdaterindsfkn (nedan) för alla foodItems som foodItem ingår i från andra dictionaryn
+#lägg till fkn i foodItem som uppdaterar deras makros (loopa igenom constituents om har)
+
 #next up: 
 # editera makros för foodItems (för foodMix ska dock bara gå att editera qty av constituents ej makros direkt) samt spara de nya värdena, även i filerna där de ligger!
 # add food
@@ -131,10 +148,12 @@ app=frontendSetup()
 app.mW.foodContainerPanel.extFCclicked_set()
 app.mW.foodContainerPanel.foodDisplayPanel.tableItemClick_set()
 
+allFoodDictionary=dict()
+constituentOfDictionary=dict()
 for f in listdir(loadDir):
     if f.endswith('.json'):
         foodHolderName=f.split('.')[0]
-        fH_dict[foodHolderName]=foodHolder(loadDir,f[0:-5])
+        fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
         app.mW.foodContainerPanel.addExtFCtoScroll(foodHolderName)
 sortFoodList(fH_dict['meat'].foodList,'kcal',False)
