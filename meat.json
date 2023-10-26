@@ -1,2 +1,2 @@
-{"name": "beef", "quantity": 100, "protein": 20, "carbs": 5, "fat": 8, "fibers": null, "kcal": 150, "constituents": [], "notes": "this is beff", "willBeUpdated": false, "isConstituentOf": [], "completeFiberInfo": false}
-{"name": "chicken", "quantity": 100, "protein": 18, "carbs": 3, "fat": 4, "fibers": null, "kcal": 100, "constituents": [], "notes": "CHICKEN\\yo!", "willBeUpdated": false, "isConstituentOf": [], "completeFiberInfo": false}
+{"name": "beef", "quantity": 100, "protein": 40.0, "carbs": 10.0, "fat": 16.0, "fibers": 0.0, "kcal": 300.0, "notes": "this is beff", "isConstituentOf": [], "macroStrs": ["kcal", "protein", "carbs", "fat", "fibers"]}
+{"name": "chicken", "quantity": 100, "protein": 18.0, "carbs": 3.0, "fat": 4.0, "fibers": 0.0, "kcal": 100.0, "notes": "CHICKEN\\yo!", "isConstituentOf": [], "macroStrs": ["kcal", "protein", "carbs", "fat", "fibers"]}

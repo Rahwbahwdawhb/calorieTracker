@@ -8,21 +8,46 @@
 
 from backend import *
 
-
 allFoodDictionary=dict()
 beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
+beef.updateAttribute('quantity',50)
 chicken=foodItem('chicken',100,100,18,3,4,notes='CHICKEN\\yo!')
 carrot=foodItem('carrot',100,20,1,5,0.1,2,notes='healthy')
 cabbage=foodItem('cabbage',100,18,0.5,3,4,1,notes='yummy')
+
 meat=foodHolder(None,'meat',allFoodDictionary)
 meat.addFood(beef)
 meat.addFood(chicken)
 meat.saveToFile()
+
+mFood=mixedFood()
+mFood.setName('mFood')
+mFood.addConstituent(beef,50)
+mFood.addConstituent(carrot,200)
+print(mFood.getMacros())
+
+testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
+testi.addFood(beef)
+testi.addFood(mFood)
+testi.saveToFile()
+
+loadDir=dirname(abspath(__file__))
+fH_dict=dict()
+allFoodDictionary=dict()
+constituentOfDictionary=dict()
+for f in listdir(loadDir):
+    if f.endswith('.json'):
+        foodHolderName=f.split('.')[0]
+        fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
+        fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
+
+#verkar funka ner hit
+
 from copy import copy
-beef2=copy(beef)
-beef2.changeQuantity(50)
-carrot2=copy(carrot)
-carrot2.changeQuantity(150)
+# beef2=copy(beef)
+# beef2.changeQuantity(50)
+# carrot2=copy(carrot)
+# carrot2.changeQuantity(150)
 combo=foodItem(name='combo',constituents=[beef2,carrot2])
 combo2=copy(combo)
 combo3=foodItem(name='combo3',constituents=[combo2,carrot2])
