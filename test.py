@@ -27,8 +27,14 @@ mFood.addConstituent(carrot,200)
 print(mFood.getMacros())
 
 testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
+beef.updateAttribute('quantity',500)
 testi.addFood(beef)
 testi.addFood(mFood)
+mFood2=deepcopy(mFood)
+mFood3=mixedFood()
+mFood3.addConstituent(mFood2,50)
+testi.addFood(mFood2)
+testi.addFood(mFood3)
 testi.saveToFile()
 
 loadDir=dirname(abspath(__file__))
@@ -40,14 +46,19 @@ for f in listdir(loadDir):
         foodHolderName=f.split('.')[0]
         fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
+1
+# for _,food in allFoodDictionary.items():
+#     if food.name=='mFood':
+#         1
+#     food.constituentOfStrsToFoods(allFoodDictionary)
 
 #verkar funka ner hit
 
 from copy import copy
-# beef2=copy(beef)
-# beef2.changeQuantity(50)
-# carrot2=copy(carrot)
-# carrot2.changeQuantity(150)
+beef2=copy(beef)
+beef2.changeQuantity(50)
+carrot2=copy(carrot)
+carrot2.changeQuantity(150)
 combo=foodItem(name='combo',constituents=[beef2,carrot2])
 combo2=copy(combo)
 combo3=foodItem(name='combo3',constituents=[combo2,carrot2])

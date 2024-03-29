@@ -13,6 +13,23 @@ def recursiveDump(foodIn):
                 dumpList.append(foodDump_iter)
             foodDict['constituents']=dumpList
             # foodIn.constituents=dumpList
+        if isinstance(foodDict['isConstituentOf'],str):
+            isConstituentOfStr=foodDict['isConstituentOf']
+        else:
+            isConstituentOfStr=''
+            try:
+                if not isinstance(foodDict['isConstituentOf'][0],str):
+                    for otherFood in foodDict['isConstituentOf']:
+                        isConstituentOfStr+=otherFood.name+','
+                    if isConstituentOfStr!='':
+                        isConstituentOfStr=isConstituentOfStr[:-1]
+                else:
+                    for foodStr in foodDict['isConstituentOf']:
+                        isConstituentOfStr+=foodStr+','
+                    isConstituentOfStr=isConstituentOfStr[:-1]
+            except:
+                pass
+        foodDict['isConstituentOf']=isConstituentOfStr
         foodDump=dumps(foodDict)
         foodDump=foodDump.replace('\\','')
         foodDump=foodDump.replace('"{','{')
@@ -40,7 +57,7 @@ def recursiveLoad(jsonIn,allFoodDictionary,constituentOfDictionary):
     # foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])
     return foodOut
 def newOrExistingFood(jsonDict,allFoodDictionary):
-    if 'constituent' not in jsonDict:
+    if 'constituents' not in jsonDict:
         food=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['notes'])      
     else:
         food=mixedFood()
@@ -49,20 +66,48 @@ def newOrExistingFood(jsonDict,allFoodDictionary):
             food.addConstituent(constituent,qty)
         food.updateNotes(jsonDict['notes'])
         food.updateMacros()
-    # food=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])    
+    # # food=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'],jsonDict['notes'])    
+    # if jsonDict['isConstituentOf']!='':
+    #     for otherFoodStr in jsonDict['isConstituentOf'].split(','):
+    #         food.makeConstituentOf(otherFoodStr)
     if jsonDict['name'] not in allFoodDictionary:
         allFoodDictionary[jsonDict['name']]=food
     else:
-        dumpStr_food=recursiveDump(food)
-        existingFood=allFoodDictionary[jsonDict['name']]
-        dumpStr_existingFood=recursiveDump(existingFood)
-        if dumpStr_food==dumpStr_existingFood:
-            food=existingFood
-        else:
-            newFoodName=food.name+'*'
-            food.name=newFoodName
-            allFoodDictionary[newFoodName]=food
+        while True:
+            # dumpStr_food=recursiveDump(food)
+            existingFood=allFoodDictionary[food.name]
+            # dumpStr_existingFood=recursiveDump(existingFood)
+            comparativeBool,foodToKeep=compareFoodStrs(food,existingFood)
+            if comparativeBool:
+                food=foodToKeep
+                break
+            else:
+                newFoodName=food.name+'*'
+                food.name=newFoodName
+                if newFoodName not in allFoodDictionary.keys():
+                    allFoodDictionary[newFoodName]=food
+                    break
     return food
+def compareFoodStrs(newFood,existingFood):
+    def strIsolator(fStr):
+        refStr='"isConstituentOf":'
+        in1=fStr.find(refStr)+len(refStr)
+        in2=fStr[in1:].find('",')
+        constituentOfStr=fStr[in1:in1+in2]
+        return fStr[:in1],fStr[in1+in2:],constituentOfStr
+    fStr1=recursiveDump(newFood)
+    fStr2=recursiveDump(existingFood)
+    if fStr1==fStr2:
+        return True,existingFood
+    else:
+        fStart1,fEnd1,constituentOfStr1=strIsolator(fStr1)
+        fStart2,fEnd2,constituentOfStr2=strIsolator(fStr2)
+        if fStart1==fStart2 and fEnd1==fEnd2:
+            if len(constituentOfStr1)>len(constituentOfStr2):
+                existingFood=newFood
+            return True,existingFood
+        else:
+            return False,None
 
 class foodHolder:
     def __init__(self,locationToSave=None,filename=str,allFoodDictionary=dict,constituentOfDictionary=dict) -> None:
@@ -95,17 +140,27 @@ class foodHolder:
                         #     self.allFoodDictionary[rowDict['name']]=newFoodItem
                         # else:
                         #     newFoodItem=self.allFoodDictionary[rowDict['name']]
-                        self.foodList.append(newFoodItem)
+                        if newFoodItem not in self.foodList:
+                            self.foodList.append(newFoodItem)
     def addFood(self,food):
         self.foodList.append(food)
     def saveToFile(self):
         with open(join(self.saveLocation,self.name+'.json'),'w') as f:
             for food in self.foodList:
-                # if food.constituents==[]:
-                if not hasattr(food,'constituents'):
-                    f.write(dumps(food.__dict__)+'\n')
+                food_=deepcopy(food)
+                if len(food.isConstituentOf)!=0:
+                    isConstituentOfStr=''
+                    for food__ in food.isConstituentOf:
+                        isConstituentOfStr+=food__.name+','
+                    isConstituentOfStr=isConstituentOfStr[:-1]
+                    food_.isConstituentOf=isConstituentOfStr
                 else:
-                    dumpStr=recursiveDump(food)
+                    food_.isConstituentOf=''
+                # if food.constituents==[]:
+                if not hasattr(food_,'constituents'):
+                    f.write(dumps(food_.__dict__)+'\n')
+                else:
+                    dumpStr=recursiveDump(food_)
                     f.write(dumpStr+'\n')
 
 class foodItem:
@@ -131,11 +186,27 @@ class foodItem:
         else:
             self.__dict__[attributeStr]=newAttributeValue
         for food in self.isConstituentOf:
-            food.update()
+            food.updateMacros()
     def assignConstituentOfList(self,constituentOfList):
         self.isConstituentOf=constituentOfList
     def makeConstituentOf(self,constituentOf):
         self.isConstituentOf.append(constituentOf)
+    # def constituentOfStrsToFoods(self,allFoodDictionary:dict):
+    #     if len(self.isConstituentOf)!=0 and isinstance(self.isConstituentOf[0],str):
+    #         isConstituentOf_foods=[]
+    #         for food in self.isConstituentOf:
+    #             if isinstance(food,str):
+    #                 try:
+    #                     food_=allFoodDictionary[food]                        
+    #                 except:
+    #                     pass
+    #             else:
+    #                 food_=food
+    #             if food_ not in isConstituentOf_foods:
+    #                 isConstituentOf_foods.append(food_)                    
+    #         self.isConstituentOf=isConstituentOf_foods
+                
+
 class mixedFood:
     def __init__(self):
         self.name=''
@@ -153,6 +224,7 @@ class mixedFood:
         self.constituents.append(constituent)
         self.constituentQuantities.append(constituentQuantity)
         self.updateMacros()
+        constituent.makeConstituentOf(self)
     def makeConstituentOf(self,constituentOf):
         self.isConstituentOf.append(constituentOf)
     def updateNotes(self,noteStr):
