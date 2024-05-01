@@ -4,11 +4,24 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QG
                               QLabel, QPushButton, QScrollArea, QLineEdit,QRadioButton, QPlainTextEdit,
                               QSpacerItem,QSizePolicy,QListWidget,QListWidgetItem, QTableWidget, QTableWidgetItem,
                               QHeaderView,QAbstractScrollArea,QStackedLayout)
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
 import copy
 
 quantityNames=['Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
+
+
+class PlainTextEdit(QPlainTextEdit):
+    def __init__(self,panel):
+        self.panel=panel
+        super().__init__() 
+    def keyPressEvent(self, event):
+        super(PlainTextEdit, self).keyPressEvent(event)
+        self.additionalKeyPressEvent()
+        # print(self.panel.displayLabel.text())
+        # print(self.toPlainText())
+    def additionalKeyPressEvent(self):
+        pass
 
 class scrollAreaWidget(QGridLayout):
     def __init__(self,scrollAreaInputStr,zeroRowHeight):
@@ -31,11 +44,15 @@ class addFoodPanel(QWidget):
         nameLayout.addWidget(self.nameEntry)
         quantityLayout.addLayout(nameLayout,0,0,1,5)
         self.quantityLineEdits=[]
-        for iter,qtn in enumerate(quantityNames):
+        for iter,qtn in enumerate(['Quantity [g]']+quantityNames):
             iterLabel=QLabel(qtn)
             iterLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
             quantityLayout.addWidget(iterLabel,2,iter)
             loopLineEdit=QLineEdit()
+            if iter==0:
+                loopLineEdit.setText('100')
+            else:
+                loopLineEdit.setText('0')
             self.quantityLineEdits.append(loopLineEdit)
             quantityLayout.addWidget(loopLineEdit,3,iter)
             quantityLayout.setColumnStretch(iter,1)
@@ -43,6 +60,7 @@ class addFoodPanel(QWidget):
         quantityLayout.setRowMinimumHeight(3,20)
         self.foodContainerScroll=scrollAreaWidget('Add to food container:',20)        
         self.addButton=QPushButton('Add')
+        self.addButton.clicked.connect(self.addButtonAction)
         foodContainerLayout=QGridLayout()
         foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8)
         foodContainerLayout.addWidget(self.addButton,1,0,2,1)
@@ -53,6 +71,8 @@ class addFoodPanel(QWidget):
         
         self.setLayout(foodPanelLayout)
         self.hide()
+    def addButtonAction(self):
+        pass
 
 class mixFoodPanel(QWidget):
     def __init__(self):
@@ -275,6 +295,7 @@ class foodDisplayPanel(QWidget):
                 match displayType:
                     case 'foodContainer':
                         self.constituentList=QTableWidget(self)
+                        # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
                         self.constituentList.setSortingEnabled(True)
                         self.constituentList.verticalHeader().setVisible(False)
                         self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -287,6 +308,7 @@ class foodDisplayPanel(QWidget):
                         displayLayout.addWidget(self.closeButton,10,0)
                     case 'foodMix':
                         self.constituentList=QTableWidget(self)
+                        # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
                         self.constituentList.setSortingEnabled(True)
                         self.constituentList.verticalHeader().setVisible(False)
                         self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -296,7 +318,9 @@ class foodDisplayPanel(QWidget):
                         self.qtyLineEdits=[]
                         for i,qtl in enumerate(qtyLabelNames):
                             qtyLayout.addWidget(QLabel(qtl),0,i)
-                            qle_i=QLineEdit()
+                            qle_i=QLabel()
+                            # qle_i=QLineEdit()
+                            # qle_i.setEnabled(False)
                             self.qtyLineEdits.append(qle_i)
                             qtyLayout.addWidget(qle_i,1,i)                    
                         displayLayout.addLayout(qtyLayout,1,0,1,4)
@@ -318,7 +342,8 @@ class foodDisplayPanel(QWidget):
                             qtyLayout.addWidget(qle_i,1,i)                    
                         displayLayout.addLayout(qtyLayout,1,0,1,4)
                         displayLayout.addLayout(hierarcyLayout,2,0,1,4)
-                        self.noteArea=QPlainTextEdit()
+                        # self.noteArea=QPlainTextEdit()
+                        self.noteArea=PlainTextEdit(self)
                         noteAreaLayout=QVBoxLayout()
                         noteAreaLayout.addWidget(QLabel('Notes:'))
                         noteAreaLayout.addWidget(self.noteArea)
@@ -343,8 +368,6 @@ class foodDisplayPanel(QWidget):
         self.foodDisplayLayout.setCurrentIndex(0)
         self.activeDisplayType='foodContainer'
         # self.constituentList.itemClicked.connect(self.onClick)
-        
-        
         # self.constituentList.show()
     def populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[]):
         self.clickList=clickList
@@ -373,6 +396,8 @@ class foodDisplayPanel(QWidget):
                     for ii,item in enumerate(subList):
                         listItem=QTableWidgetItem(item)
                         self.foodListHolder.constituentList.setItem(i,ii,listItem)
+                        listItem.setFlags(Qt.ItemFlag.NoItemFlags)
+                        listItem.setForeground(QColor(0,0,0))
                 self.foodListHolder.constituentList.setHorizontalHeaderLabels(headers)
             case 'foodMix':
                 self.foodDisplayLayout.setCurrentIndex(1)
@@ -397,6 +422,8 @@ class foodDisplayPanel(QWidget):
                 for i,subList in enumerate(dataList):
                     for ii,item in enumerate(subList):
                         listItem=QTableWidgetItem(item)
+                        listItem.setFlags(Qt.ItemFlag.NoItemFlags)
+                        listItem.setForeground(QColor(0,0,0))
                         self.foodMixHolder.constituentList.setItem(i,ii,listItem)
                 self.foodMixHolder.constituentList.setHorizontalHeaderLabels(headers)
                 for i,qle in enumerate(self.foodMixHolder.qtyLineEdits):
@@ -418,6 +445,12 @@ class foodDisplayPanel(QWidget):
 
                 for i,qle in enumerate(self.foodItemHolder.qtyLineEdits):
                     qle.setText(str(dataList[i]))
+                    qle.returnPressed.connect(self.foodItemEdits)
+                self.foodItemHolder.noteArea.additionalKeyPressEvent=self.foodItemNoteKeyPressEvent
+    def foodItemNoteKeyPressEvent(self):
+        pass
+    def foodItemEdits(self):
+        pass
     def hierarcyClick_external(self):
         pass
     def tableItemClick_set(self):
@@ -467,6 +500,13 @@ class mainWindow(QWidget):
         mainLayout.setColumnStretch(0,1)
         mainLayout.setColumnStretch(1,3)
 
+    def closeEvent(self, a0: QCloseEvent):
+        self.additionalCloseEvents()
+        return super().closeEvent(a0)
+    def additionalCloseEvents(self):
+        pass
+    def foodContainerPanelUpdate(self):
+        pass
     def panelToggler(self):
         if self.sender()==self.addFoodButton:
             self.foodPanel.show()
@@ -480,6 +520,7 @@ class mainWindow(QWidget):
             self.foodPanel.hide()
             self.mixPanel.hide()
             self.foodContainerPanel.show()
+            self.foodContainerPanelUpdate()
 
 
 

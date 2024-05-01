@@ -225,6 +225,7 @@ class mixedFood:
         self.constituentQuantities.append(constituentQuantity)
         self.updateMacros()
         constituent.makeConstituentOf(self)
+        self.quantity=sum(self.constituentQuantities)
     def makeConstituentOf(self,constituentOf):
         self.isConstituentOf.append(constituentOf)
     def updateNotes(self,noteStr):

@@ -8,34 +8,34 @@
 
 from backend import *
 
-allFoodDictionary=dict()
-beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
-beef.updateAttribute('quantity',50)
-chicken=foodItem('chicken',100,100,18,3,4,notes='CHICKEN\\yo!')
-carrot=foodItem('carrot',100,20,1,5,0.1,2,notes='healthy')
-cabbage=foodItem('cabbage',100,18,0.5,3,4,1,notes='yummy')
+# allFoodDictionary=dict()
+# beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
+# beef.updateAttribute('quantity',50)
+# chicken=foodItem('chicken',100,100,18,3,4,notes='CHICKEN\\yo!')
+# carrot=foodItem('carrot',100,20,1,5,0.1,2,notes='healthy')
+# cabbage=foodItem('cabbage',100,18,0.5,3,4,1,notes='yummy')
 
-meat=foodHolder(None,'meat',allFoodDictionary)
-meat.addFood(beef)
-meat.addFood(chicken)
-meat.saveToFile()
+# meat=foodHolder(None,'meat',allFoodDictionary)
+# meat.addFood(beef)
+# meat.addFood(chicken)
+# meat.saveToFile()
 
-mFood=mixedFood()
-mFood.setName('mFood')
-mFood.addConstituent(beef,50)
-mFood.addConstituent(carrot,200)
-print(mFood.getMacros())
+# mFood=mixedFood()
+# mFood.setName('mFood')
+# mFood.addConstituent(beef,50)
+# mFood.addConstituent(carrot,200)
+# print(mFood.getMacros())
 
-testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
-beef.updateAttribute('quantity',500)
-testi.addFood(beef)
-testi.addFood(mFood)
-mFood2=deepcopy(mFood)
-mFood3=mixedFood()
-mFood3.addConstituent(mFood2,50)
-testi.addFood(mFood2)
-testi.addFood(mFood3)
-testi.saveToFile()
+# testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
+# beef.updateAttribute('quantity',500)
+# testi.addFood(beef)
+# testi.addFood(mFood)
+# mFood2=deepcopy(mFood)
+# mFood3=mixedFood()
+# mFood3.addConstituent(mFood2,50)
+# testi.addFood(mFood2)
+# testi.addFood(mFood3)
+# testi.saveToFile()
 
 loadDir=dirname(abspath(__file__))
 fH_dict=dict()
@@ -46,34 +46,6 @@ for f in listdir(loadDir):
         foodHolderName=f.split('.')[0]
         fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
-1
-# for _,food in allFoodDictionary.items():
-#     if food.name=='mFood':
-#         1
-#     food.constituentOfStrsToFoods(allFoodDictionary)
-
-#verkar funka ner hit
-
-from copy import copy
-beef2=copy(beef)
-beef2.changeQuantity(50)
-carrot2=copy(carrot)
-carrot2.changeQuantity(150)
-combo=foodItem(name='combo',constituents=[beef2,carrot2])
-combo2=copy(combo)
-combo3=foodItem(name='combo3',constituents=[combo2,carrot2])
-combo.showNutrients()
-combo.showNutrients_constituents()
-testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
-# for food in testi.foodList:
-#     food.showNutrients()
-#     food.showNutrients_constituents()
-testi.addFood(combo)
-testi.addFood(combo3)
-testi.saveToFile()
-# for m in meat.foodList:
-#     m.showNutrients()
-
 
 loadDir=dirname(abspath(__file__))
 fH_dict=dict()
@@ -113,24 +85,34 @@ def updateClickList(clickText,foodID):
     else:
         clickList.append(clickText)
         clickList_details.append(('food',foodID))
-def onClick_ext(self,item):
+def tableItemOnClick_ext(self,item):
     if self.activeDisplayType=='foodContainer':
         self.foodListHolder.constituentList.selectRow(item.row())
-        foodID=self.foodListHolder.constituentList.item(item.row(),self.foodListHolder.constituentList.columnCount()-1).text()    
+        foodID=self.foodListHolder.constituentList.item(item.row(),self.foodListHolder.constituentList.columnCount()-1).text()
+        holderType=self.foodListHolder
     else:
         self.foodMixHolder.constituentList.selectRow(item.row())
         foodID=self.foodMixHolder.constituentList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()    
-    updateClickList(item.text(),foodID)
+        holderType=self.foodMixHolder
+    itemText=holderType.constituentList.item(item.row(),0).text()    
+    # for i in range(6):
+    #     holderType.constituentList.item(item.row(),i).setForeground(QBrush(Qt.GlobalColor.green,Qt.BrushStyle.SolidPattern))
+    updateClickList(itemText,foodID)
     # rowStr=''
     # for i in range(5):
     #     rowStr+=','+self.foodListHolder.constituentList.item(item.row(),i).text()
     # print(rowStr)
     # print(self.constituentList.item(item.row(),self.constituentList.columnCount()-1).text())    
-    foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
-    if foodStack:
-        self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
+    if isinstance(self.foodDict[foodID],mixedFood):
+        foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
     else:
-        self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+        foodStack=False
+    if foodStack:
+        # self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
+        self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
+    else:
+        # self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
 def resetClickHistory(self):
     clickList.clear()
@@ -144,21 +126,91 @@ def hierarcyClick(self,item):
         del clickList[1:]
         del clickList_details[1:]
         self.populatePanel(foodStack,foodAttributes,foodContainerName,'foodContainer',clickList)
-        print('foodContainer')
     else:
         foodID=clickList_details[hierarcyIndex][1]
         updateClickList(item.text(),foodID)
-        foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
-        if foodStack:
-            self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
+        if isinstance(self.foodDict[foodID],mixedFood):
+            foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
         else:
-            self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+            foodStack=False
+        if foodStack:
+            self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
+        else:
+            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
-foodDisplayPanel.tableItemClick_external=onClick_ext
+foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
 foodContainerPanel.resetClickHistory_external=resetClickHistory
 foodDisplayPanel.hierarcyClick_external=hierarcyClick
 
+nonUniqueStr='There\'s already a food item with this name, please change it!'
+fcEnterStr='Enter existing food container!'
+def addFoodButtonAction(self):
+    qtys=[]
+    for ql in self.quantityLineEdits:
+        qtys.append(float(ql.text()))
+    if self.nameEntry.text() not in allFoodDictionary.keys() and self.nameEntry.text()!=nonUniqueStr:
+        if self.foodContainerScroll.entryField.text() in fH_dict.keys():
+            newFood=foodItem(name=self.nameEntry.text(),quantity=qtys[0],kcal=qtys[1],protein=qtys[2],carbs=qtys[3],fat=qtys[4],fibers=qtys[5],notes='')
+            allFoodDictionary[self.nameEntry.text()]=newFood
+            fH_dict[self.foodContainerScroll.entryField.text()].addFood(newFood)
+            for iter,ql in enumerate(self.quantityLineEdits):
+                if iter==0:
+                    ql.setText('100')
+                else:
+                    ql.setText('0')
+                self.nameEntry.setText('')
+                self.foodContainerScroll.entryField.setText('')
+        else:
+            self.foodContainerScroll.entryField.setText(fcEnterStr)
+    else:
+        self.nameEntry.setText(nonUniqueStr)
+        print('hej')
+
+addFoodPanel.addButtonAction=addFoodButtonAction
+
+def onClosingApplication(self):
+    for fhdName in fH_dict.keys():
+        fH_dict[fhdName].saveToFile()
+def repeatLastHierarchyClick(self):
+    if len(clickList)!=0:
+        self.foodContainerPanel.foodDisplayPanel.hierarcyClick_external(QLabel(clickList[-1]))
+mainWindow.additionalCloseEvents=onClosingApplication
+mainWindow.foodContainerPanelUpdate=repeatLastHierarchyClick
+foodItemFields=['quantity','kcal','protein','carbos','fat','fibers']
+def editFoodItem(self):
+    foodItem=allFoodDictionary[self.foodItemHolder.displayLabel.text()]
+    if self.sender()==self.foodItemHolder.noteArea:
+        if foodItem.notes!=self.foodItemHolder.noteArea.toPlainText():
+            currentText=self.foodItemHolder.noteArea.toPlainText()+''
+            foodItem.updateNote(currentText)
+            # self.foodItemHolder.noteArea.clear()
+            self.foodItemHolder.noteArea.setPlainText(currentText)
+
+    else:        
+        fieldIndex=self.foodItemHolder.qtyLineEdits.index(self.sender())
+        foodItem.updateAttribute(foodItemFields[fieldIndex],float(self.sender().text()))
+    self.hierarcyClick_external(QLabel(clickList[-1]))
+def foodItemNoteKeyPressEvent(self):
+    foodItem=allFoodDictionary[self.foodItemHolder.displayLabel.text()]
+    foodItem.updateNote(self.foodItemHolder.noteArea.toPlainText())
+    cursor=self.foodItemHolder.noteArea.textCursor()
+    cursorPosition=cursor.position()
+    self.hierarcyClick_external(QLabel(clickList[-1]))          
+    cursor.setPosition(cursorPosition,QTextCursor.MoveMode.MoveAnchor)
+    self.foodItemHolder.noteArea.setTextCursor(cursor)    
+    # cursor.movePosition(cursorPosition,QTextCursor.MoveMode.KeepAnchor)
+foodDisplayPanel.foodItemNoteKeyPressEvent=foodItemNoteKeyPressEvent
+foodDisplayPanel.foodItemEdits=editFoodItem
+
 ######################          FIXA DETTA          ############################################
+#fixa så får upp lista på foodcontainers i addfood-tab, om klickar på en foodcontainer i listan ska dess namn skrivas in i foodcontainer qlineedit
+#fixa så kan mixa foods och editera qtys samt notes
+#fixa så ser lista på foods/existing foods då skriver in namn
+
+
+
+
+
 #läser in unika foodItems och länkar likadana som ingredienser mellan olika foods
 #lägger till * i slutet av namn på foodItem m samma namn men annorlunda makros
 #problem: qty är attribut av food, så om har 50 g beef i en och 100 g beef i en annan kommer dessa foodItems ses som olika även fast utgår från samma beef
@@ -193,8 +245,8 @@ for f in listdir(loadDir):
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
         app.mW.foodContainerPanel.addExtFCtoScroll(foodHolderName)
 sortFoodList(fH_dict['meat'].foodList,'kcal',False)
-for food in fH_dict['meat'].foodList:
-    food.showNutrients()
+# for food in fH_dict['meat'].foodList:
+#     food.showNutrients()
     
 app.startGUI()
 1
