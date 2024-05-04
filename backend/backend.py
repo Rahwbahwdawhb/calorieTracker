@@ -48,7 +48,8 @@ def recursiveLoad(jsonIn,allFoodDictionary,constituentOfDictionary):
             if foodRetrieved.name not in constituentOfDictionary.keys():
                 constituentOfDictionary[foodRetrieved.name]=[]
             constituentOfDictionary[foodRetrieved.name].append(jsonDict['name'])            
-            foodList.append(foodRetrieved)
+            if foodRetrieved not in foodList:
+                foodList.append(foodRetrieved)
         # foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],constituents=[])
         jsonDict['constituents']=foodList
     #     foodOut=foodItem(jsonDict['name'],jsonDict['quantity'],jsonDict['kcal'],jsonDict['protein'],jsonDict['carbs'],jsonDict['fat'],jsonDict['fibers'],jsonDict['constituents'])        
@@ -77,8 +78,10 @@ def newOrExistingFood(jsonDict,allFoodDictionary):
             # dumpStr_food=recursiveDump(food)
             existingFood=allFoodDictionary[food.name]
             # dumpStr_existingFood=recursiveDump(existingFood)
-            comparativeBool,foodToKeep=compareFoodStrs(food,existingFood)
+            comparativeBool,foodToKeep=compareFoodStrs(food,existingFood)            
             if comparativeBool:
+                if foodToKeep==existingFood:
+                    food.removeFoodToFoodReferences()
                 food=foodToKeep
                 break
             else:
@@ -131,7 +134,8 @@ class foodHolder:
                         #     rowFood.constituents.append(foodItem(foodDict['name'],foodDict['quantity'],foodDict['kcal'],foodDict['protein'],foodDict['carbs'],foodDict['fat'],foodDict['fibers'],foodDict['constituents']))                                
                         # self.foodList.append(rowFood)
                         rowFood=recursiveLoad(row,self.allFoodDictionary,self.constituentOfDictionary)
-                        self.foodList.append(rowFood)
+                        if rowFood not in self.foodList:
+                            self.foodList.append(rowFood)
                         #läs in constituents separat och skapa foodItems för dem, se till att funkar även med nestade..antagligen rekursiv funktion, kolla om bara behöver rekursiv funktion för att spara, modifiera json-string som får ut från nestade foodItems så tar bort "" mellan nya items i listan...
                     else:
                         newFoodItem=newOrExistingFood(rowDict,self.allFoodDictionary)
@@ -191,6 +195,12 @@ class foodItem:
         self.isConstituentOf=constituentOfList
     def makeConstituentOf(self,constituentOf):
         self.isConstituentOf.append(constituentOf)
+    def removeFoodReference(self,foodToRemove):
+        if foodToRemove in self.isConstituentOf:
+            self.isConstituentOf.remove(foodToRemove)
+    def removeFoodToFoodReferences(self):
+        for food in self.isConstituentOf:
+            food.removeFoodReference(self)
     # def constituentOfStrsToFoods(self,allFoodDictionary:dict):
     #     if len(self.isConstituentOf)!=0 and isinstance(self.isConstituentOf[0],str):
     #         isConstituentOf_foods=[]
@@ -245,6 +255,18 @@ class mixedFood:
             self.quantity+=qty
             for macroStr,constituent_macro in zip(self.macroStrs,constituent.getMacros()):
                 exec('self.'+macroStr+'+=qty/constituent.quantity*constituent_macro')
+    def removeFoodReference(self,foodToRemove):
+        if foodToRemove in self.isConstituentOf:
+            self.isConstituentOf.remove(foodToRemove)
+        if foodToRemove in self.constituents:
+            removeIndex=self.constituents.index(foodToRemove)
+            del self.constituents[removeIndex]
+            del self.constituentQuantities[removeIndex]
+    def removeFoodToFoodReferences(self):
+        for food in self.isConstituentOf:
+            food.removeFoodReference(self)
+        for food in self.constituents:
+            food.removeFoodReference(self)
             
 
 # class foodItem:

@@ -6,7 +6,7 @@
 # import copy
 # import tkinter as tk
 
-from backend import *
+from backend.backend import *
 
 # allFoodDictionary=dict()
 # beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
@@ -52,7 +52,7 @@ fH_dict=dict()
 foodAttributes=['name','quantity','protein','carbs','fat','fibers','kcal','constituents']
 clickList=[]
 clickList_details=[]
-from frontend import *
+from frontend.GUIassembler import *
 # import time
 def getFoodStack(foodList,foodDict):
     foodStack=[]
@@ -90,11 +90,17 @@ def tableItemOnClick_ext(self,item):
         self.foodListHolder.constituentList.selectRow(item.row())
         foodID=self.foodListHolder.constituentList.item(item.row(),self.foodListHolder.constituentList.columnCount()-1).text()
         holderType=self.foodListHolder
-    else:
+        itemText=holderType.constituentList.item(item.row(),0).text()    
+    elif self.activeDisplayType=='foodMix':
         self.foodMixHolder.constituentList.selectRow(item.row())
         foodID=self.foodMixHolder.constituentList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()    
         holderType=self.foodMixHolder
-    itemText=holderType.constituentList.item(item.row(),0).text()    
+        itemText=holderType.constituentList.item(item.row(),0).text()    
+    else:
+        self.foodItemHolder.ingridientList.selectRow(item.row())
+        foodID=self.foodItemHolder.ingridientList.item(item.row(),self.foodItemHolder.ingridientList.columnCount()-1).text()    
+        holderType=self.foodItemHolder
+        itemText=holderType.ingridientList.item(item.row(),0).text()    
     # for i in range(6):
     #     holderType.constituentList.item(item.row(),i).setForeground(QBrush(Qt.GlobalColor.green,Qt.BrushStyle.SolidPattern))
     updateClickList(itemText,foodID)
@@ -112,7 +118,8 @@ def tableItemOnClick_ext(self,item):
         self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
     else:
         # self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
-        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+        # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=[[f.name]+f.getMacros() for f in self.foodDict[foodID].isConstituentOf])
+        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
 def resetClickHistory(self):
     clickList.clear()
@@ -136,7 +143,9 @@ def hierarcyClick(self,item):
         if foodStack:
             self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
         else:
-            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+            # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
+            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+            
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
 foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
 foodContainerPanel.resetClickHistory_external=resetClickHistory
@@ -215,9 +224,14 @@ addFoodPanel.populateFoods=addFood_populateFoods
 
 
 ######################          FIXA DETTA          ############################################
-#fixa så får upp lista på foodcontainers i addfood-tab, om klickar på en foodcontainer i listan ska dess namn skrivas in i foodcontainer qlineedit
+#fixa så kan ta bort foods
 #fixa så kan mixa foods och editera qtys samt notes
-#fixa så ser lista på foods/existing foods då skriver in namn
+#fixa ny panel där kan göra samling av måltider:
+#-batcha upp separata mål
+#-möjlighet att ha target macros att jfr m
+#-piechart över hur kalorier är fördelade
+#-på nåt sätt kunna nesta i godtyckligt antal nivåer
+
 
 
 
