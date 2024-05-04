@@ -3,7 +3,7 @@ from PyQt6 import QtCore
 from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QGridLayout,
                               QLabel, QPushButton, QScrollArea, QLineEdit,QRadioButton, QPlainTextEdit,
                               QSpacerItem,QSizePolicy,QListWidget,QListWidgetItem, QTableWidget, QTableWidgetItem,
-                              QHeaderView,QAbstractScrollArea,QStackedLayout)
+                              QHeaderView,QAbstractScrollArea,QStackedLayout,QScrollBar)
 from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
 import copy
@@ -18,60 +18,133 @@ class PlainTextEdit(QPlainTextEdit):
     def keyPressEvent(self, event):
         super(PlainTextEdit, self).keyPressEvent(event)
         self.additionalKeyPressEvent()
-        # print(self.panel.displayLabel.text())
-        # print(self.toPlainText())
     def additionalKeyPressEvent(self):
         pass
-
-class scrollAreaWidget(QGridLayout):
+class modQLineEdit(QLineEdit):
+    def __init__(self):
+        super().__init__() 
+    def keyPressEvent(self, event):
+        QLineEdit.keyPressEvent(self,event)
+        self.additionalKeyPressEvent()
+    def additionalKeyPressEvent(self):
+        pass
+class searchField(QGridLayout):
     def __init__(self,scrollAreaInputStr,zeroRowHeight):
         super().__init__()
         self.addWidget(QLabel(scrollAreaInputStr),1,0)
-        self.entryField=QLineEdit()
+        # self.entryField=QLineEdit()
+        self.entryField=modQLineEdit()
+        self.entryField.additionalKeyPressEvent=self.additionalKeyPressEvent
+        self.entryField.focusInEvent=self.whenEFinFocused
+        self.entryField.focusOutEvent=self.whenEFoutFocused
         self.addWidget(self.entryField,1,1)
-        self.scrollList=QScrollArea()
-        self.addWidget(self.scrollList,2,0,1,2)
+        # self.scrollList=QScrollArea()
+        self.scrollList=QListWidget()
+        self.scrollList.itemClicked.connect(self.scrollListClicked)
+        self.addWidget(self.scrollList,2,1,1,1)
+        self.addWidget(QLabel(),3,0)
+        # self.setRowStretch(0,1)
+        self.setRowStretch(1,1)
+        self.setRowStretch(2,2)
+        self.setRowStretch(3,5)
         self.setRowMinimumHeight(0,zeroRowHeight)
+        scrollbar=QScrollBar()
+        self.scrollList.setVerticalScrollBar(scrollbar)
+        self.scrollList.hide()
+        # for _ in range(50):
+        #     self.scrollList.addItem(QListWidgetItem('hej'))
+    def addToScrollList(self,strToAdd):
+        self.scrollList.addItem(QListWidgetItem(strToAdd))
+    def clearScrollList(self):
+        self.scrollList.clear()
+    def additionalKeyPressEvent(self):
+        self.scrollList.show()
+        for i in range(self.scrollList.count()):
+            if self.entryField.text() not in self.scrollList.item(i).text():
+                self.scrollList.item(i).setHidden(True)
+            else:
+                self.scrollList.item(i).setHidden(False)        
+    def whenEFinFocused(self,event):
+        QLineEdit.focusInEvent(self.entryField,event)
+        self.scrollList.show()
+    def whenEFoutFocused(self,event):
+        QLineEdit.focusOutEvent(self.entryField,event)
+        self.scrollList.hide()
+    def scrollListClicked(self):
+        self.entryField.setText(self.sender().currentItem().text())
+        self.entryField.setFocus()
+        self.scrollList.hide()
+    def text(self):
+        return self.entryField.text()
+    def setText(self,strToSet):
+        self.entryField.setText(strToSet)
 
 class addFoodPanel(QWidget):
     def __init__(self):
         super().__init__()
-
         quantityLayout=QGridLayout()        
-        self.nameEntry=QLineEdit()
-        nameLayout=QHBoxLayout()
-        nameLayout.addWidget(QLabel('Name:'))
-        nameLayout.addWidget(self.nameEntry)
-        quantityLayout.addLayout(nameLayout,0,0,1,5)
+        self.nameEntry=searchField('Name:',0)
+        # nameLayout=QHBoxLayout()
+        # nameLayout.addLayout(self.nameEntry)
+        # quantityLayout.addLayout(nameLayout,0,0,1,5)
+        quantityLayout.setContentsMargins(0,60,0,0)
         self.quantityLineEdits=[]
         for iter,qtn in enumerate(['Quantity [g]']+quantityNames):
             iterLabel=QLabel(qtn)
             iterLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            quantityLayout.addWidget(iterLabel,2,iter)
+            quantityLayout.addWidget(iterLabel,0,iter)
             loopLineEdit=QLineEdit()
             if iter==0:
                 loopLineEdit.setText('100')
             else:
                 loopLineEdit.setText('0')
             self.quantityLineEdits.append(loopLineEdit)
-            quantityLayout.addWidget(loopLineEdit,3,iter)
+            quantityLayout.addWidget(loopLineEdit,1,iter)
             quantityLayout.setColumnStretch(iter,1)
         quantityLayout.setRowMinimumHeight(1,20)
         quantityLayout.setRowMinimumHeight(3,20)
-        self.foodContainerScroll=scrollAreaWidget('Add to food container:',20)        
+        self.foodContainerScroll=searchField('Add to food container:',20) 
+        topWrapLayout=QGridLayout()
+        topWrapLayout.addLayout(quantityLayout,0,0,1,8)
+        topWrapLayout.addLayout(self.nameEntry,0,0,1,8)
+        
+        # self.foodContainerScroll.entryField.additionalKeyPressEvent=self.onFoodTyping
+        # self.foodContainerScroll.scrollList.itemClicked.connect(self.foodContainerClicked)
+        self.notes=QPlainTextEdit()
+        noteLayout=QGridLayout()
+        noteLayout.setContentsMargins(0,45,0,0)
+        noteLayout.addWidget(QLabel('Notes:'),0,0)
+        noteLayout.addWidget(self.notes,1,0)
         self.addButton=QPushButton('Add')
         self.addButton.clicked.connect(self.addButtonAction)
         foodContainerLayout=QGridLayout()
-        foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8)
-        foodContainerLayout.addWidget(self.addButton,1,0,2,1)
+        foodContainerLayout.addLayout(noteLayout,0,0,1,8)
+        foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8,alignment=Qt.AlignmentFlag.AlignTop)
+        foodContainerLayout.addWidget(self.addButton,2,0,2,1)
 
-        foodPanelLayout=QVBoxLayout()
-        foodPanelLayout.addLayout(quantityLayout)
-        foodPanelLayout.addLayout(foodContainerLayout)
+        foodPanelLayout=QGridLayout()
+        foodPanelLayout.addLayout(topWrapLayout,0,0)
+        foodPanelLayout.addLayout(foodContainerLayout,1,0)
+        foodPanelLayout.setRowStretch(0,1)
+        foodPanelLayout.setRowStretch(1,3)
         
         self.setLayout(foodPanelLayout)
         self.hide()
     def addButtonAction(self):
+        pass
+    # def onFoodTyping(self):
+    #     # self.scrollList
+    #     for i in range(self.foodContainerScroll.scrollList.count()):
+    #         if self.foodContainerScroll.entryField.text() not in self.foodContainerScroll.scrollList.item(i).text():
+    #             self.foodContainerScroll.scrollList.item(i).setHidden(True)
+    #         else:
+    #             self.foodContainerScroll.scrollList.item(i).setHidden(False)
+    # def foodContainerClicked(self):
+    #     self.foodContainerScroll.entryField.setText(self.sender().currentItem().text())
+    #     self.foodContainerScroll.entryField.setFocus()
+    def populateFoodContainers(self):
+        pass
+    def populateFoods(self):
         pass
 
 class mixFoodPanel(QWidget):
@@ -101,7 +174,7 @@ class mixFoodPanel(QWidget):
         ingridientLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ingridientScroll=QScrollArea()
 
-        self.ingridientAddScroll=scrollAreaWidget('Add ingridient:',0)
+        self.ingridientAddScroll=searchField('Add ingridient:',0)
         self.addIngridientButton=QPushButton('Add')
         ingridientLayout=QGridLayout()
         ingridientLayout.addLayout(self.ingridientAddScroll,0,0,1,8)
@@ -110,7 +183,7 @@ class mixFoodPanel(QWidget):
         self.ingridientWidget=QWidget()
         self.ingridientWidget.setLayout(ingridientLayout)
 
-        self.foodContainerScroll=scrollAreaWidget('Add to food container:',0)        
+        self.foodContainerScroll=searchField('Add to food container:',0)        
         self.addToFoodContainerButton=QPushButton('Add')
         foodContainerLayout=QGridLayout()
         foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8)
@@ -510,6 +583,8 @@ class mainWindow(QWidget):
     def panelToggler(self):
         if self.sender()==self.addFoodButton:
             self.foodPanel.show()
+            self.foodPanel.populateFoodContainers()
+            self.foodPanel.populateFoods()
             self.mixPanel.hide()
             self.foodContainerPanel.hide()
         elif self.sender()==self.mixFoodButton:

@@ -149,8 +149,8 @@ def addFoodButtonAction(self):
     for ql in self.quantityLineEdits:
         qtys.append(float(ql.text()))
     if self.nameEntry.text() not in allFoodDictionary.keys() and self.nameEntry.text()!=nonUniqueStr:
-        if self.foodContainerScroll.entryField.text() in fH_dict.keys():
-            newFood=foodItem(name=self.nameEntry.text(),quantity=qtys[0],kcal=qtys[1],protein=qtys[2],carbs=qtys[3],fat=qtys[4],fibers=qtys[5],notes='')
+        if self.foodContainerScroll.entryField.text() in fH_dict.keys():            
+            newFood=foodItem(name=self.nameEntry.text(),quantity=qtys[0],kcal=qtys[1],protein=qtys[2],carbs=qtys[3],fat=qtys[4],fibers=qtys[5],notes=self.notes.toPlainText())
             allFoodDictionary[self.nameEntry.text()]=newFood
             fH_dict[self.foodContainerScroll.entryField.text()].addFood(newFood)
             for iter,ql in enumerate(self.quantityLineEdits):
@@ -160,11 +160,11 @@ def addFoodButtonAction(self):
                     ql.setText('0')
                 self.nameEntry.setText('')
                 self.foodContainerScroll.entryField.setText('')
+                self.notes.setPlainText('')
         else:
             self.foodContainerScroll.entryField.setText(fcEnterStr)
     else:
         self.nameEntry.setText(nonUniqueStr)
-        print('hej')
 
 addFoodPanel.addButtonAction=addFoodButtonAction
 
@@ -201,6 +201,18 @@ def foodItemNoteKeyPressEvent(self):
     # cursor.movePosition(cursorPosition,QTextCursor.MoveMode.KeepAnchor)
 foodDisplayPanel.foodItemNoteKeyPressEvent=foodItemNoteKeyPressEvent
 foodDisplayPanel.foodItemEdits=editFoodItem
+
+def addFood_populateFoodContainers(self):
+    self.foodContainerScroll.clearScrollList()
+    for fhName in fH_dict.keys():
+        self.foodContainerScroll.addToScrollList(fhName)
+def addFood_populateFoods(self):
+    self.nameEntry.clearScrollList()
+    for fName in allFoodDictionary.keys():
+        self.nameEntry.addToScrollList(fName)
+addFoodPanel.populateFoodContainers=addFood_populateFoodContainers
+addFoodPanel.populateFoods=addFood_populateFoods
+
 
 ######################          FIXA DETTA          ############################################
 #fixa så får upp lista på foodcontainers i addfood-tab, om klickar på en foodcontainer i listan ska dess namn skrivas in i foodcontainer qlineedit
