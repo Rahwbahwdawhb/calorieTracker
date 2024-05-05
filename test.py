@@ -49,7 +49,7 @@ for f in listdir(loadDir):
 
 loadDir=dirname(abspath(__file__))
 fH_dict=dict()
-foodAttributes=['name','quantity','protein','carbs','fat','fibers','kcal','constituents']
+foodAttributes=['name','kcal','quantity','protein','carbs','fat','fibers','constituents']
 clickList=[]
 clickList_details=[]
 from frontend.GUIassembler import *
@@ -151,6 +151,13 @@ foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
 foodContainerPanel.resetClickHistory_external=resetClickHistory
 foodDisplayPanel.hierarcyClick_external=hierarcyClick
 
+def createFC(self):
+    foodHolderName=self.searchField.text()
+    fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=foodHolderName,allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
+    self.addExtFCtoScroll(foodHolderName)
+    
+foodContainerPanel.createFC=createFC
+
 nonUniqueStr='There\'s already a food item with this name, please change it!'
 fcEnterStr='Enter existing food container!'
 def addFoodButtonAction(self):
@@ -224,16 +231,13 @@ addFoodPanel.populateFoods=addFood_populateFoods
 
 
 ######################          FIXA DETTA          ############################################
-#fixa så kan ta bort foods
+#fixa så kan ta bort foods och food containers via gui
 #fixa så kan mixa foods och editera qtys samt notes
 #fixa ny panel där kan göra samling av måltider:
 #-batcha upp separata mål
 #-möjlighet att ha target macros att jfr m
 #-piechart över hur kalorier är fördelade
 #-på nåt sätt kunna nesta i godtyckligt antal nivåer
-
-
-
 
 
 

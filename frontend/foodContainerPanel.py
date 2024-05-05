@@ -11,43 +11,23 @@ quantityNames=['Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fi
 class foodContainerPanel(QWidget):
     def __init__(self):
         super().__init__()
-
-        self.rbExtFCs=QRadioButton('Existing food containers')
-        self.rbExtFCs.clicked.connect(self.toggleSubPanels)
-        self.rbNewFC=QRadioButton('New food container')
-        self.rbNewFC.clicked.connect(self.toggleSubPanels)
-
-        foodContainerLayout=QGridLayout()
-        foodContainerLayout.addWidget(self.rbExtFCs,0,0,1,1)
-        foodContainerLayout.addWidget(self.rbNewFC,0,1,1,2)        
-
+        foodContainerLayout=QGridLayout()      
+        existingLayout=QVBoxLayout()
+        existingLayout.addWidget(QLabel('Existing food containers:'))
         self.extScroll=QListWidget()
-        foodContainerLayout.addWidget(self.extScroll,2,0,5,4)
+        existingLayout.addWidget(self.extScroll)
+        foodContainerLayout.addLayout(existingLayout,0,0,5,4)
 
-        self.newFCentry=QLineEdit()
-        self.newFCnote=QPlainTextEdit()
-        self.addButton=QPushButton('Add')
+        self.searchField=modQLineEdit()
+        self.searchField.additionalKeyPressEvent=self.additionalKeyPressEvent
+        self.createButton=QPushButton('Create')
+        self.createButton.setDisabled(True)
+        self.createButton.clicked.connect(self.createFC)
         nameLayout=QHBoxLayout()
-        nameLabel=QLabel('Name:')
-        nameLayout.addWidget(nameLabel)
-        nameLayout.addWidget(self.newFCentry)
-        buttonLayout=QHBoxLayout()
-        buttonLayout.addWidget(self.addButton)
-        buttonLayout.addItem(QSpacerItem(20,10,QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Minimum))
-        buttonLayout.setStretch(0,1)
-        buttonLayout.setStretch(1,10)
-        
-
-        newFClayout=QVBoxLayout()
-        newFClayout.addLayout(nameLayout)
-        newFClayout.addWidget(QLabel('Notes:'))
-        newFClayout.addWidget(self.newFCnote)
-        newFClayout.addLayout(buttonLayout)
-        
-        newFClayout.setContentsMargins(0,0,0,0)
-        self.newFCwidget=QWidget()
-        self.newFCwidget.setLayout(newFClayout)
-        foodContainerLayout.addWidget(self.newFCwidget,2,0,5,4)
+        nameLayout.addWidget(QLabel('Search:'))
+        nameLayout.addWidget(self.searchField)
+        nameLayout.addWidget(self.createButton)
+        foodContainerLayout.addLayout(nameLayout,5,0,1,4)           
         
         self.foodDisplayPanel=foodDisplayPanel()
         self.foodDisplayPanel.foodListHolder.closeButton.clicked.connect(self.closeFoodDisplayPanel)
@@ -60,17 +40,18 @@ class foodContainerPanel(QWidget):
         self.stackLayout.addWidget(foodContainerLayoutContainer)
         self.stackLayout.addWidget(self.foodDisplayPanel)
         self.setLayout(self.stackLayout)
-        self.rbExtFCs.click()
         self.hide()
-
-    def toggleSubPanels(self):
-        if self.sender()==self.rbExtFCs:
-            self.newFCwidget.hide()
-            self.extScroll.show()
-        else:
-            self.newFCwidget.show()
-            self.extScroll.hide()
-    
+    def additionalKeyPressEvent(self):
+        matchingItems=0
+        self.createButton.setDisabled(True)
+        for i in range(self.extScroll.count()):
+            if self.searchField.text() not in self.extScroll.item(i).text():
+                self.extScroll.item(i).setHidden(True)
+            else:
+                self.extScroll.item(i).setHidden(False) 
+                matchingItems+=1            
+        if matchingItems==0:
+            self.createButton.setDisabled(False)
     def addExtFCtoScroll(self,itemStr):
         self.extScroll.addItem(QListWidgetItem(itemStr))
     def extFCclicked_set(self):
@@ -81,6 +62,8 @@ class foodContainerPanel(QWidget):
         self.stackLayout.setCurrentIndex(0)
         self.resetClickHistory_external()
     def resetClickHistory_external(self):
+        pass
+    def createFC(self):
         pass
 
 
@@ -206,8 +189,8 @@ class foodDisplayPanel(QWidget):
                 self.foodListHolder.constituentList.setRowCount(0)
                 self.foodListHolder.constituentList.setColumnCount(0)
                 self.foodListHolder.constituentList.setRowCount(len(dataList))
-                self.foodListHolder.constituentList.setColumnCount(len(dataList[0]))
-                self.foodListHolder.constituentList.setColumnHidden(len(dataList[0])-1,True)
+                self.foodListHolder.constituentList.setColumnCount(len(headers))
+                self.foodListHolder.constituentList.setColumnHidden(len(headers)-1,True)
                 self.foodListHolder.displayLabel.setText(panelTitle)
                 
                 self.foodListHolder.hierarcyScroll.clear()
@@ -225,8 +208,8 @@ class foodDisplayPanel(QWidget):
                 self.foodMixHolder.constituentList.setRowCount(0)
                 self.foodMixHolder.constituentList.setColumnCount(0)
                 self.foodMixHolder.constituentList.setRowCount(len(dataList))
-                self.foodMixHolder.constituentList.setColumnCount(len(dataList[0]))
-                self.foodMixHolder.constituentList.setColumnHidden(len(dataList[0])-1,True)
+                self.foodMixHolder.constituentList.setColumnCount(len(headers))
+                self.foodMixHolder.constituentList.setColumnHidden(len(headers)-1,True)
                 self.foodMixHolder.displayLabel.setText(panelTitle)
 
                 self.foodMixHolder.hierarcyScroll.clear()
@@ -261,8 +244,8 @@ class foodDisplayPanel(QWidget):
                 self.foodItemHolder.ingridientList.setRowCount(0)
                 self.foodItemHolder.ingridientList.setColumnCount(0)
                 self.foodItemHolder.ingridientList.setRowCount(len(dataList2))
-                self.foodItemHolder.ingridientList.setColumnCount(len(dataList2[0]))
-                self.foodItemHolder.ingridientList.setColumnHidden(len(dataList2[0])-1,True)
+                self.foodItemHolder.ingridientList.setColumnCount(len(headers))
+                self.foodItemHolder.ingridientList.setColumnHidden(len(headers)-1,True)
                 self.populateQTableWidget(dataList2,self.foodItemHolder.ingridientList,headers)
 
                 for i,qle in enumerate(self.foodItemHolder.qtyLineEdits):
@@ -270,12 +253,16 @@ class foodDisplayPanel(QWidget):
                     qle.returnPressed.connect(self.foodItemEdits)
                 self.foodItemHolder.noteArea.additionalKeyPressEvent=self.foodItemNoteKeyPressEvent
     def populateQTableWidget(self,dataList,tableWidget,headers):
-        for i,subList in enumerate(dataList):
-            for ii,item in enumerate(subList):
-                listItem=QTableWidgetItem(item)
-                tableWidget.setItem(i,ii,listItem)
-                listItem.setFlags(Qt.ItemFlag.NoItemFlags)
-                listItem.setForeground(QColor(0,0,0))
+        if len(dataList)!=0:
+            for i,subList in enumerate(dataList):
+                for ii,item in enumerate(subList):
+                    listItem=QTableWidgetItem(item)
+                    tableWidget.setItem(i,ii,listItem)
+                    listItem.setFlags(Qt.ItemFlag.NoItemFlags)
+                    listItem.setForeground(QColor(0,0,0))
+        else:
+            for i,_ in enumerate(headers):
+                tableWidget.setItem(0,i,QTableWidgetItem(''))
         tableWidget.setHorizontalHeaderLabels(headers)
     def foodItemNoteKeyPressEvent(self):
         pass
