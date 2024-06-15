@@ -60,117 +60,120 @@ class foodContainerPanel(QWidget):
         pass
     def closeFoodDisplayPanel(self):
         self.stackLayout.setCurrentIndex(0)
-        self.resetClickHistory_external()
-    def resetClickHistory_external(self):
+        self.closeDisplayPanel_external()
+    def closeDisplayPanel_external(self):
         pass
     def createFC(self):
         pass
 
-
+class displayWidgetCreator(QWidget):
+    def __init__(self,displayType):
+        super().__init__()
+        displayLayout=QGridLayout()
+        self.hierarcyScroll=QListWidget()
+        hierarcyLayout=QVBoxLayout()
+        hierarcyLayout.addWidget(QLabel('Hierarcy:'))
+        hierarcyLayout.addWidget(self.hierarcyScroll)
+        self.closeButton=QPushButton('Food container list')    
+        self.displayLabel=QLabel('')    
+        displayLayout.addWidget(self.displayLabel,0,2)    
+        self.deleteButton=QPushButton('Delete')        
+        displayLayout.addWidget(self.deleteButton,0,3)   
+        match displayType:
+            case 'foodContainer':
+                self.constituentList=QTableWidget(self)
+                # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+                self.constituentList.setSortingEnabled(True)
+                self.constituentList.verticalHeader().setVisible(False)
+                self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+                displayLayout.addLayout(hierarcyLayout,1,0,1,4)
+                constituentListLayout=QVBoxLayout()
+                constituentListLayout.addWidget(QLabel('Foods:'))
+                constituentListLayout.addWidget(self.constituentList)
+                displayLayout.addLayout(constituentListLayout,2,0,8,4)
+                displayLayout.addWidget(self.closeButton,10,0)
+            case 'foodMix':
+                self.constituentList=QTableWidget(self)
+                # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+                self.constituentList.setSortingEnabled(True)
+                self.constituentList.verticalHeader().setVisible(False)
+                self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+                qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
+                qtyLayout=QGridLayout()
+                self.qtyLineEdits=[]
+                for i,qtl in enumerate(qtyLabelNames):
+                    qtyLayout.addWidget(QLabel(qtl),0,i)
+                    qle_i=QLabel()
+                    self.qtyLineEdits.append(qle_i)
+                    qtyLayout.addWidget(qle_i,1,i)                    
+                displayLayout.addLayout(qtyLayout,1,0,1,4)
+                displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                self.noteArea=QPlainTextEdit()
+                constituentListLayout=QVBoxLayout()
+                constituentListLayout.addWidget(QLabel('Constituents:'))
+                constituentListLayout.addWidget(self.constituentList)
+                displayLayout.addLayout(constituentListLayout,3,0,7,4)
+                displayLayout.addWidget(self.closeButton,10,0)
+            case 'foodItem':
+                qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
+                qtyLayout=QGridLayout()
+                self.qtyLineEdits=[]
+                for i,qtl in enumerate(qtyLabelNames):
+                    qtyLayout.addWidget(QLabel(qtl),0,i)
+                    qle_i=QLineEdit()
+                    self.qtyLineEdits.append(qle_i)
+                    qtyLayout.addWidget(qle_i,1,i)                    
+                displayLayout.addLayout(qtyLayout,1,0,1,4)
+                displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                # self.noteArea=QPlainTextEdit()
+                self.noteArea=PlainTextEdit(self)                                       
+                # noteAreaLayout=QVBoxLayout()
+                # noteAreaLayout.addWidget(self.noteArea)
+                # noteAreaLayout.setContentsMargins(0,0,0,0)
+                self.ingridientList=QTableWidget()
+                self.ingridientList.setSortingEnabled(True)
+                self.ingridientList.verticalHeader().setVisible(False)
+                self.ingridientList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                self.ingridientList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+                # noteAreaWidet=QWidget()
+                # noteAreaWidet.setLayout(noteAreaLayout)
+                self.stackLayout=QStackedLayout()
+                self.stackLayout.addWidget(self.noteArea)
+                self.stackLayout.addWidget(self.ingridientList)
+                radioButtonLayout=QHBoxLayout()
+                noteRB=QRadioButton('Notes')
+                ingridientsRB=QRadioButton('Ingridient in')
+                self.radioButtonList=[noteRB,ingridientsRB]
+                noteRB.clicked.connect(self.radioButtonToggle)
+                noteRB.click()
+                ingridientsRB.clicked.connect(self.radioButtonToggle)
+                radioButtonLayout.addWidget(noteRB)
+                radioButtonLayout.addWidget(ingridientsRB)
+                displayLayout.addLayout(radioButtonLayout,3,0,1,4)
+                displayLayout.addLayout(self.stackLayout,4,0,6,4)
+                displayLayout.addWidget(self.closeButton,10,0)
+        for i in range(11):
+            displayLayout.setRowStretch(i,1)
+        displayLayout.setContentsMargins(0,0,0,0)
+        self.setLayout(displayLayout)
+    def radioButtonToggle(self):
+        self.stackLayout.setCurrentIndex(self.radioButtonList.index(self.sender()))
+    
 class foodDisplayPanel(QWidget):
     def __init__(self):
         super().__init__()
         self.foodDisplayLayout=QStackedLayout()
-        
-        class displayWidgetCreator(QWidget):
-            def __init__(self,displayType):
-                super().__init__()
-                displayLayout=QGridLayout()
-                self.hierarcyScroll=QListWidget()
-                hierarcyLayout=QVBoxLayout()
-                hierarcyLayout.addWidget(QLabel('Hierarcy:'))
-                hierarcyLayout.addWidget(self.hierarcyScroll)
-                self.closeButton=QPushButton('Food container list')    
-                self.displayLabel=QLabel('')    
-                displayLayout.addWidget(self.displayLabel,0,2)    
-                match displayType:
-                    case 'foodContainer':
-                        self.constituentList=QTableWidget(self)
-                        # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-                        self.constituentList.setSortingEnabled(True)
-                        self.constituentList.verticalHeader().setVisible(False)
-                        self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-                        self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-                        displayLayout.addLayout(hierarcyLayout,1,0,1,4)
-                        constituentListLayout=QVBoxLayout()
-                        constituentListLayout.addWidget(QLabel('Foods:'))
-                        constituentListLayout.addWidget(self.constituentList)
-                        displayLayout.addLayout(constituentListLayout,2,0,8,4)
-                        displayLayout.addWidget(self.closeButton,10,0)
-                    case 'foodMix':
-                        self.constituentList=QTableWidget(self)
-                        # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-                        self.constituentList.setSortingEnabled(True)
-                        self.constituentList.verticalHeader().setVisible(False)
-                        self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-                        self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-                        qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
-                        qtyLayout=QGridLayout()
-                        self.qtyLineEdits=[]
-                        for i,qtl in enumerate(qtyLabelNames):
-                            qtyLayout.addWidget(QLabel(qtl),0,i)
-                            qle_i=QLabel()
-                            self.qtyLineEdits.append(qle_i)
-                            qtyLayout.addWidget(qle_i,1,i)                    
-                        displayLayout.addLayout(qtyLayout,1,0,1,4)
-                        displayLayout.addLayout(hierarcyLayout,2,0,1,4)
-                        self.noteArea=QPlainTextEdit()
-                        constituentListLayout=QVBoxLayout()
-                        constituentListLayout.addWidget(QLabel('Constituents:'))
-                        constituentListLayout.addWidget(self.constituentList)
-                        displayLayout.addLayout(constituentListLayout,3,0,7,4)
-                        displayLayout.addWidget(self.closeButton,10,0)
-                    case 'foodItem':
-                        qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
-                        qtyLayout=QGridLayout()
-                        self.qtyLineEdits=[]
-                        for i,qtl in enumerate(qtyLabelNames):
-                            qtyLayout.addWidget(QLabel(qtl),0,i)
-                            qle_i=QLineEdit()
-                            self.qtyLineEdits.append(qle_i)
-                            qtyLayout.addWidget(qle_i,1,i)                    
-                        displayLayout.addLayout(qtyLayout,1,0,1,4)
-                        displayLayout.addLayout(hierarcyLayout,2,0,1,4)
-                        # self.noteArea=QPlainTextEdit()
-                        self.noteArea=PlainTextEdit(self)                                       
-                        # noteAreaLayout=QVBoxLayout()
-                        # noteAreaLayout.addWidget(self.noteArea)
-                        # noteAreaLayout.setContentsMargins(0,0,0,0)
-                        self.ingridientList=QTableWidget()
-                        self.ingridientList.setSortingEnabled(True)
-                        self.ingridientList.verticalHeader().setVisible(False)
-                        self.ingridientList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-                        self.ingridientList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-                        # noteAreaWidet=QWidget()
-                        # noteAreaWidet.setLayout(noteAreaLayout)
-                        self.stackLayout=QStackedLayout()
-                        self.stackLayout.addWidget(self.noteArea)
-                        self.stackLayout.addWidget(self.ingridientList)
-                        radioButtonLayout=QHBoxLayout()
-                        noteRB=QRadioButton('Notes')
-                        ingridientsRB=QRadioButton('Ingridient in')
-                        self.radioButtonList=[noteRB,ingridientsRB]
-                        noteRB.clicked.connect(self.radioButtonToggle)
-                        noteRB.click()
-                        ingridientsRB.clicked.connect(self.radioButtonToggle)
-                        radioButtonLayout.addWidget(noteRB)
-                        radioButtonLayout.addWidget(ingridientsRB)
-                        displayLayout.addLayout(radioButtonLayout,3,0,1,4)
-                        displayLayout.addLayout(self.stackLayout,4,0,6,4)
-                        displayLayout.addWidget(self.closeButton,10,0)
-                for i in range(11):
-                    displayLayout.setRowStretch(i,1)
-                displayLayout.setContentsMargins(0,0,0,0)
-                self.setLayout(displayLayout)
-            def radioButtonToggle(self):
-                self.stackLayout.setCurrentIndex(self.radioButtonList.index(self.sender()))
-        
         self.foodListHolder=displayWidgetCreator('foodContainer')        
-        self.foodListHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)      
+        self.foodListHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)  
+        self.foodListHolder.deleteButton.clicked.connect(self.deleteButtonAction)    
         self.foodMixHolder=displayWidgetCreator('foodMix')        
-        self.foodMixHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)      
+        self.foodMixHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)
+        self.foodMixHolder.deleteButton.clicked.connect(self.deleteButtonAction)          
         self.foodItemHolder=displayWidgetCreator('foodItem')
         self.foodItemHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)  
+        self.foodItemHolder.deleteButton.clicked.connect(self.deleteButtonAction)          
 
         self.foodDisplayLayout.addWidget(self.foodListHolder)
         self.foodDisplayLayout.addWidget(self.foodMixHolder)
@@ -178,7 +181,9 @@ class foodDisplayPanel(QWidget):
         self.setLayout(self.foodDisplayLayout)
         self.foodDisplayLayout.setCurrentIndex(0)
         self.activeDisplayType='foodContainer'    
+        self.panelTitle=''
     def populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[]):
+        self.panelTitle=panelTitle
         self.clickList=clickList
         self.activeDisplayType=displayType
         q=QFont()
@@ -285,3 +290,5 @@ class foodDisplayPanel(QWidget):
         print(self.constituentList.item(item.row(),self.constituentList.columnCount()-1).text())
         foodID=self.constituentList.item(item.row(),self.constituentList.columnCount()-1).text()
         self.foodDict[foodID]
+    def deleteButtonAction(self):
+        pass

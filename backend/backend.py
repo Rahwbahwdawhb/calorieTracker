@@ -5,6 +5,10 @@ from copy import copy, deepcopy
 
 def recursiveDump(foodIn):
         foodDict=deepcopy(foodIn.__dict__)
+        try:
+            del foodDict['foodHolder']
+        except:
+            pass
         # if foodIn.constituents!=[]: 
         if 'constituents' in foodDict:
             dumpList=[]
@@ -133,9 +137,9 @@ class foodHolder:
                         # for foodDict in rowDict['constituents']:
                         #     rowFood.constituents.append(foodItem(foodDict['name'],foodDict['quantity'],foodDict['kcal'],foodDict['protein'],foodDict['carbs'],foodDict['fat'],foodDict['fibers'],foodDict['constituents']))                                
                         # self.foodList.append(rowFood)
-                        rowFood=recursiveLoad(row,self.allFoodDictionary,self.constituentOfDictionary)
-                        if rowFood not in self.foodList:
-                            self.foodList.append(rowFood)
+                        newFoodItem=recursiveLoad(row,self.allFoodDictionary,self.constituentOfDictionary)
+                        # if rowFood not in self.foodList:
+                        #     self.foodList.append(rowFood)
                         #läs in constituents separat och skapa foodItems för dem, se till att funkar även med nestade..antagligen rekursiv funktion, kolla om bara behöver rekursiv funktion för att spara, modifiera json-string som får ut från nestade foodItems så tar bort "" mellan nya items i listan...
                     else:
                         newFoodItem=newOrExistingFood(rowDict,self.allFoodDictionary)
@@ -144,8 +148,9 @@ class foodHolder:
                         #     self.allFoodDictionary[rowDict['name']]=newFoodItem
                         # else:
                         #     newFoodItem=self.allFoodDictionary[rowDict['name']]
-                        if newFoodItem not in self.foodList:
-                            self.foodList.append(newFoodItem)
+                    if newFoodItem not in self.foodList:
+                        self.foodList.append(newFoodItem)
+                        newFoodItem.assignFoodHolder(self)
     def addFood(self,food):
         self.foodList.append(food)
     def saveToFile(self):
@@ -162,7 +167,12 @@ class foodHolder:
                     food_.isConstituentOf=''
                 # if food.constituents==[]:
                 if not hasattr(food_,'constituents'):
-                    f.write(dumps(food_.__dict__)+'\n')
+                    foodDict=deepcopy(food_.__dict__)
+                    try:
+                        del foodDict['foodHolder']
+                    except:
+                        pass
+                    f.write(dumps(foodDict)+'\n')
                 else:
                     dumpStr=recursiveDump(food_)
                     f.write(dumpStr+'\n')
@@ -195,12 +205,18 @@ class foodItem:
         self.isConstituentOf=constituentOfList
     def makeConstituentOf(self,constituentOf):
         self.isConstituentOf.append(constituentOf)
+    def assignFoodHolder(self,foodHolder):
+        self.foodHolder=foodHolder
     def removeFoodReference(self,foodToRemove):
         if foodToRemove in self.isConstituentOf:
             self.isConstituentOf.remove(foodToRemove)
     def removeFoodToFoodReferences(self):
         for food in self.isConstituentOf:
             food.removeFoodReference(self)
+        try:
+            self.foodHolder.foodList.remove(self)
+        except:
+            pass
     # def constituentOfStrsToFoods(self,allFoodDictionary:dict):
     #     if len(self.isConstituentOf)!=0 and isinstance(self.isConstituentOf[0],str):
     #         isConstituentOf_foods=[]
@@ -228,6 +244,8 @@ class mixedFood:
         self.resetMacros()
     def setName(self,nameStr):
         self.name=nameStr
+    def assignFoodHolder(self,foodHolder):
+        self.foodHolder=foodHolder
     def assignConstituentOfList(self,constituentOfList):
         self.isConstituentOf=constituentOfList
     def addConstituent(self,constituent,constituentQuantity):
@@ -262,11 +280,16 @@ class mixedFood:
             removeIndex=self.constituents.index(foodToRemove)
             del self.constituents[removeIndex]
             del self.constituentQuantities[removeIndex]
+        self.updateMacros()
     def removeFoodToFoodReferences(self):
         for food in self.isConstituentOf:
             food.removeFoodReference(self)
         for food in self.constituents:
             food.removeFoodReference(self)
+        try:
+            self.foodHolder.foodList.remove(self)
+        except:
+            pass
             
 
 # class foodItem:

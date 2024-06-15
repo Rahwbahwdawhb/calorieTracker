@@ -7,6 +7,11 @@
 # import tkinter as tk
 
 from backend.backend import *
+from os.path import exists
+from os import remove
+
+loadDir=dirname(abspath(__file__))
+
 
 # allFoodDictionary=dict()
 # beef=foodItem('beef',100,150,20,5,8,notes='this is beff')
@@ -15,7 +20,7 @@ from backend.backend import *
 # carrot=foodItem('carrot',100,20,1,5,0.1,2,notes='healthy')
 # cabbage=foodItem('cabbage',100,18,0.5,3,4,1,notes='yummy')
 
-# meat=foodHolder(None,'meat',allFoodDictionary)
+# meat=foodHolder(loadDir,'meat',allFoodDictionary)
 # meat.addFood(beef)
 # meat.addFood(chicken)
 # meat.saveToFile()
@@ -26,7 +31,7 @@ from backend.backend import *
 # mFood.addConstituent(carrot,200)
 # print(mFood.getMacros())
 
-# testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary)
+# testi=foodHolder(filename='testi',allFoodDictionary=allFoodDictionary,locationToSave=loadDir)
 # beef.updateAttribute('quantity',500)
 # testi.addFood(beef)
 # testi.addFood(mFood)
@@ -37,7 +42,6 @@ from backend.backend import *
 # testi.addFood(mFood3)
 # testi.saveToFile()
 
-loadDir=dirname(abspath(__file__))
 fH_dict=dict()
 allFoodDictionary=dict()
 constituentOfDictionary=dict()
@@ -121,9 +125,12 @@ def tableItemOnClick_ext(self,item):
         # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=[[f.name]+f.getMacros() for f in self.foodDict[foodID].isConstituentOf])
         self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
-def resetClickHistory(self):
+def closeDisplayPanel_external(self):    
     clickList.clear()
     clickList_details.clear()
+    self.extScroll.clear()
+    for foodHolderName in fH_dict.keys():
+        self.addExtFCtoScroll(foodHolderName)
 def hierarcyClick(self,item):
     hierarcyIndex=clickList.index(item.text())
     if clickList_details[hierarcyIndex][0]=='foodContainer':
@@ -148,7 +155,7 @@ def hierarcyClick(self,item):
             
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
 foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
-foodContainerPanel.resetClickHistory_external=resetClickHistory
+foodContainerPanel.closeDisplayPanel_external=closeDisplayPanel_external
 foodDisplayPanel.hierarcyClick_external=hierarcyClick
 
 def createFC(self):
@@ -229,6 +236,24 @@ def addFood_populateFoods(self):
 addFoodPanel.populateFoodContainers=addFood_populateFoodContainers
 addFoodPanel.populateFoods=addFood_populateFoods
 
+def deleteFunction(self):
+    print(self.activeDisplayType)
+    if self.activeDisplayType=='foodContainer':
+        print(self.activeDisplayType,self.panelTitle,fH_dict[self.panelTitle])
+        del fH_dict[self.panelTitle]        
+        if exists(self.panelTitle+'.json'):
+            remove(self.panelTitle+'.json')
+        self.foodListHolder.closeButton.click()
+    else:
+        if self.activeDisplayType=='foodMix':
+            activeDisplay=self.foodMixHolder
+        else:
+            activeDisplay=self.foodItemHolder        
+        allFoodDictionary[self.panelTitle].removeFoodToFoodReferences()
+        del allFoodDictionary[self.panelTitle]
+        self.hierarcyClick_external(activeDisplay.hierarcyScroll.item(activeDisplay.hierarcyScroll.count()-2))        
+        
+foodDisplayPanel.deleteButtonAction=deleteFunction
 
 ######################          FIXA DETTA          ############################################
 #fixa så kan ta bort foods och food containers via gui
@@ -274,7 +299,7 @@ for f in listdir(loadDir):
         fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
         app.mW.foodContainerPanel.addExtFCtoScroll(foodHolderName)
-sortFoodList(fH_dict['meat'].foodList,'kcal',False)
+# sortFoodList(fH_dict['meat'].foodList,'kcal',False)
 # for food in fH_dict['meat'].foodList:
 #     food.showNutrients()
     
