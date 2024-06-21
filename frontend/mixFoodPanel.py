@@ -7,34 +7,38 @@ from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
 from .aidFunctionality import *
 
-quantityNames=['Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
+quantityNames=['Quantity [g]','Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
 
 class mixFoodPanel(QWidget):
     def __init__(self):
         super().__init__()
 
         quantityLayout=QGridLayout()        
-        self.nameEntry=QLineEdit()
-        nameLayout=QHBoxLayout()
-        nameLayout.addWidget(QLabel('Name:'))
-        nameLayout.addWidget(self.nameEntry)
-        quantityLayout.addLayout(nameLayout,0,0,1,5)
+        self.nameEntry=searchField('Name:',0)
+        quantityLayout.setContentsMargins(0,60,0,0)
         self.quantityStatLabels=[]
         for iter,qtn in enumerate(quantityNames):
             iterLabel=QLabel(qtn)
             iterLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            quantityLayout.addWidget(iterLabel,2,iter)
+            quantityLayout.addWidget(iterLabel,0,iter)
             quantity=QLabel('0')
             quantity.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            quantityLayout.addWidget(quantity,3,iter)
+            quantityLayout.addWidget(quantity,1,iter)
             self.quantityStatLabels.append(quantity)
             quantityLayout.setColumnStretch(iter,1)
         quantityLayout.setRowMinimumHeight(1,20)
-        quantityLayout.setRowMinimumHeight(3,20)
+        quantityLayout.setRowMinimumHeight(3,30)
+
+        topWrapLayout=QGridLayout()
+        topWrapLayout.addLayout(quantityLayout,0,0,1,8)
+        topWrapLayout.addLayout(self.nameEntry,0,0,1,8)
 
         ingridientLabel=QLabel('Ingridients')
         ingridientLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ingridientScroll=QScrollArea()
+        ingridientScrollLayout=QVBoxLayout()
+        ingridientScrollLayout.addWidget(ingridientLabel)
+        ingridientScrollLayout.addWidget(self.ingridientScroll)
 
         self.ingridientAddScroll=searchField('Add ingridient:',0)
         self.addIngridientButton=QPushButton('Add')
@@ -78,18 +82,18 @@ class mixFoodPanel(QWidget):
         rbLayout.setStretch(1,2)
         rbLayout.setStretch(2,1)
 
-        mixPanelLayout=QVBoxLayout()
-        mixPanelLayout.addLayout(quantityLayout)
-        mixPanelLayout.addWidget(ingridientLabel)
-        mixPanelLayout.addWidget(self.ingridientScroll)
-        mixPanelLayout.insertSpacing(3,5)
-        mixPanelLayout.addLayout(rbLayout)
-        mixPanelLayout.addWidget(self.ingridientWidget)
-        mixPanelLayout.addWidget(self.foodContainerWidget) 
-        mixPanelLayout.addWidget(self.noteWidget)
-        mixPanelLayout.setStretch(5,1)
-        mixPanelLayout.setStretch(6,1)
-        mixPanelLayout.setStretch(7,1)
+        mixPanelLayout=QGridLayout()
+        mixPanelLayout.addLayout(topWrapLayout,0,0)
+        mixPanelLayout.addLayout(ingridientScrollLayout,1,0)
+        bottomWrapLayout=QGridLayout()
+        bottomWrapLayout.addLayout(rbLayout,0,0,1,8)
+        bottomWrapLayout.addWidget(self.ingridientWidget,1,0,2,8)
+        bottomWrapLayout.addWidget(self.foodContainerWidget,1,0,2,8) 
+        bottomWrapLayout.addWidget(self.noteWidget,1,0,2,8)
+        mixPanelLayout.addLayout(bottomWrapLayout,2,0)
+        mixPanelLayout.setRowStretch(0,2)
+        mixPanelLayout.setRowStretch(1,2)
+        mixPanelLayout.setRowStretch(2,3)
         
         self.setLayout(mixPanelLayout)
 

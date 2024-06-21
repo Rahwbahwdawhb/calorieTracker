@@ -256,7 +256,6 @@ def deleteFunction(self):
 foodDisplayPanel.deleteButtonAction=deleteFunction
 
 ######################          FIXA DETTA          ############################################
-#fixa så kan ta bort foods och food containers via gui
 #fixa så kan mixa foods och editera qtys samt notes
 #fixa ny panel där kan göra samling av måltider:
 #-batcha upp separata mål
