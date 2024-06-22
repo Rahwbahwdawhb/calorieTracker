@@ -173,7 +173,11 @@ class foodDisplayPanel(QWidget):
         self.foodMixHolder.deleteButton.clicked.connect(self.deleteButtonAction)          
         self.foodItemHolder=displayWidgetCreator('foodItem')
         self.foodItemHolder.hierarcyScroll.itemClicked.connect(self.hierarcyClick_external)  
-        self.foodItemHolder.deleteButton.clicked.connect(self.deleteButtonAction)          
+        self.foodItemHolder.deleteButton.clicked.connect(self.deleteButtonAction)    
+
+        self.foodListHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
+        self.foodMixHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
+        self.foodItemHolder.ingridientList.itemClicked.connect(self.tableItemClick_external)      
 
         self.foodDisplayLayout.addWidget(self.foodListHolder)
         self.foodDisplayLayout.addWidget(self.foodMixHolder)
@@ -275,10 +279,6 @@ class foodDisplayPanel(QWidget):
         pass
     def hierarcyClick_external(self):
         pass
-    def tableItemClick_set(self):
-        self.foodListHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
-        self.foodMixHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
-        self.foodItemHolder.ingridientList.itemClicked.connect(self.tableItemClick_external)
     def tableItemClick_external(self):
         pass
     def onClick(self,item):

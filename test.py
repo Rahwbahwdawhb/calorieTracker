@@ -236,6 +236,92 @@ def addFood_populateFoods(self):
 addFoodPanel.populateFoodContainers=addFood_populateFoodContainers
 addFoodPanel.populateFoods=addFood_populateFoods
 
+def mixFood_populateFoods(self):
+    self.nameEntry.clearScrollList()
+    self.ingridientEntry.clearScrollList()
+    for fName in allFoodDictionary.keys():
+        self.nameEntry.addToScrollList(fName)
+        self.ingridientEntry.addToScrollList(fName)
+mixFoodPanel.populateFoods=mixFood_populateFoods
+mixFoodPanel.populateFoodContainers=addFood_populateFoodContainers
+def addIngridient(self):    
+    try:
+        qty=float(self.ingridientQuantityEntry.text())
+        if qty>=0:
+            ingridientMacros=allFoodDictionary[self.ingridientEntry.text()].getMacros()
+            nIngridients=self.ingridientScroll.rowCount()    
+            self.ingridientScroll.setRowCount(nIngridients+1)            
+            nameCellEntry=QTableWidgetItem(self.ingridientEntry.text())
+            nameCellEntry.setFlags(Qt.ItemFlag.NoItemFlags)
+            nameCellEntry.setForeground(QColor(0,0,0))
+            self.ingridientScroll.setItem(nIngridients,0,nameCellEntry)
+            self.ingridientScroll.setItem(nIngridients,1,QTableWidgetItem(self.ingridientQuantityEntry.text()))
+            self.quantityStatLabels[0].setText(str(float(self.quantityStatLabels[0].text())+qty))
+            for i,cellEntry in enumerate(ingridientMacros):
+                macroValue=round(cellEntry*qty/100,2)
+                cellItem=QTableWidgetItem(str(macroValue))
+                cellItem.setForeground(QColor(0,0,0))
+                cellItem.setFlags(Qt.ItemFlag.NoItemFlags) 
+                self.quantityStatLabels[i+1].setText(str(round(float(self.quantityStatLabels[i+1].text())+macroValue,2)))
+                self.ingridientScroll.setItem(nIngridients,i+2,cellItem)
+    except:
+        pass
+def quantityUpdated(self):
+    if self.ingridientScroll.currentItem() is not None:        
+        selectedRowIndex=self.ingridientScroll.currentRow()
+        selectedFoodMacros=allFoodDictionary[self.ingridientScroll.item(selectedRowIndex,0).text()].getMacros()        
+        newQuantity=float(self.ingridientScroll.currentItem().text())/100
+        try:
+            currentQuantity=float(self.ingridientScroll.item(selectedRowIndex,2).text())/selectedFoodMacros[0]
+        except:
+            currentQuantity=self.lastEnteredQuantity
+        if newQuantity<0:
+            newQuantity=currentQuantity
+            self.ingridientScroll.currentItem().setText(str(currentQuantity*100))
+        self.quantityStatLabels[0].setText(str(round(float(self.quantityStatLabels[0].text())-100*currentQuantity+100*newQuantity,2)))
+        for i,macro in enumerate(selectedFoodMacros):
+            self.quantityStatLabels[i+1].setText(str(round(float(self.quantityStatLabels[i+1].text())-macro*currentQuantity+macro*newQuantity,2)))
+            self.ingridientScroll.item(selectedRowIndex,i+2).setText(str(round(macro*newQuantity,2)))
+def quantityEntered(self):
+    if self.ingridientScroll.currentItem() is not None:
+        self.lastEnteredQuantity=float(self.ingridientScroll.currentItem().text())/100
+def deleteIngridient(self):
+    if self.ingridientScroll.currentItem() is not None:  
+        rowIndex=self.ingridientScroll.currentRow()
+        for i in range(self.ingridientScroll.columnCount()-1):
+            self.quantityStatLabels[i].setText(str(float(self.quantityStatLabels[i].text())-float(self.ingridientScroll.item(rowIndex,i+1).text())))
+        self.ingridientScroll.removeRow(rowIndex)
+mixFoodPanel.addIngridient=addIngridient
+mixFoodPanel.quantityUpdated=quantityUpdated
+mixFoodPanel.quantityEntered=quantityEntered
+mixFoodPanel.deleteIngridient=deleteIngridient
+
+def addMixed(self):    
+    if self.nameEntry.text() not in allFoodDictionary.keys() and self.nameEntry.text()!=nonUniqueStr:
+        if self.foodContainerScroll.entryField.text() in fH_dict.keys():            
+            newFood=mixedFood()
+            newFood.setName(self.nameEntry.text())
+            
+            self.ingridientScroll.columnCount()
+            while self.ingridientScroll.rowCount()>0:
+                newFood.addConstituent(allFoodDictionary[self.ingridientScroll.item(0,0).text()],float(self.ingridientScroll.item(0,1).text()))
+                self.ingridientScroll.removeRow(0)
+            newFood.updateNotes(self.noteArea.toPlainText())
+
+            for quantityLabel in self.quantityStatLabels:
+                quantityLabel.setText('0')
+            
+            allFoodDictionary[self.nameEntry.text()]=newFood
+            fH_dict[self.foodContainerScroll.entryField.text()].addFood(newFood)
+            
+            self.nameEntry.setText('')
+            self.foodContainerScroll.entryField.setText('')
+            self.noteArea.setPlainText('')
+        else:
+            self.foodContainerScroll.entryField.setText(fcEnterStr)
+    else:
+        self.nameEntry.setText(nonUniqueStr)
+mixFoodPanel.addMixedFoodToFoodContainer=addMixed
 def deleteFunction(self):
     print(self.activeDisplayType)
     if self.activeDisplayType=='foodContainer':
@@ -256,7 +342,9 @@ def deleteFunction(self):
 foodDisplayPanel.deleteButtonAction=deleteFunction
 
 ######################          FIXA DETTA          ############################################
-#fixa så kan mixa foods och editera qtys samt notes
+#i mixed food panel, ha add ingridient å ingridient quantity på samma rad å add to food container på rad under, notearea därunder å minska tomrum
+#lägg till så ser notes å constituent of i mixed foodpanel
+#gör separat script för fooddisplaypanel å displaywidgetcreator
 #fixa ny panel där kan göra samling av måltider:
 #-batcha upp separata mål
 #-möjlighet att ha target macros att jfr m
@@ -288,7 +376,6 @@ foodDisplayPanel.deleteButtonAction=deleteFunction
 
 app=frontendSetup()
 app.mW.foodContainerPanel.extFCclicked_set()
-app.mW.foodContainerPanel.foodDisplayPanel.tableItemClick_set()
 
 allFoodDictionary=dict()
 constituentOfDictionary=dict()

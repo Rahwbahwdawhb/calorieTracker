@@ -76,3 +76,27 @@ class searchField(QGridLayout):
         return self.entryField.text()
     def setText(self,strToSet):
         self.entryField.setText(strToSet)
+
+class returnDeleteDetectQTableWidget(QTableWidget):
+    def __init__(self, parent=None):
+        super(returnDeleteDetectQTableWidget, self).__init__(parent)
+    def keyReleaseEvent(self, event):
+         key = event.key()
+         if key == Qt.Key.Key_Return or key == Qt.Key.Key_Enter:
+             self.returnReleaseAction()
+         elif key == Qt.Key.Key_Delete:
+             self.deleteReleaseAction()
+         else:
+             super(returnDeleteDetectQTableWidget, self).keyReleaseEvent(event)
+    def keyPressEvent(self, event):
+         key = event.key()
+         if key == Qt.Key.Key_Return or key == Qt.Key.Key_Enter:
+             self.returnPressAction()         
+         else:
+             super(returnDeleteDetectQTableWidget, self).keyPressEvent(event)
+    def returnReleaseAction(self):
+        pass
+    def returnPressAction(self):
+        pass
+    def deleteReleaseAction(self):
+        pass

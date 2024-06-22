@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt, QRect
 from .aidFunctionality import *
 
 quantityNames=['Quantity [g]','Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
-
+ingridientInfo=['Name','Qty [g]','Cal. [kcal]','Protein [g]','Carbs [g]','Fat [g]','Fibers [g]']
 class mixFoodPanel(QWidget):
     def __init__(self):
         super().__init__()
@@ -35,22 +35,39 @@ class mixFoodPanel(QWidget):
 
         ingridientLabel=QLabel('Ingridients')
         ingridientLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.ingridientScroll=QScrollArea()
+        self.ingridientScroll=returnDeleteDetectQTableWidget()
+        self.ingridientScroll.setSortingEnabled(True)
+        self.ingridientScroll.verticalHeader().setVisible(False)
+        self.ingridientScroll.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.ingridientScroll.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.ingridientScroll.setColumnCount(len(ingridientInfo))
+        self.ingridientScroll.setHorizontalHeaderLabels(ingridientInfo)
+        self.ingridientScroll.returnReleaseAction=self.quantityUpdated
+        self.ingridientScroll.returnPressAction=self.quantityEntered
+        self.ingridientScroll.deleteReleaseAction=self.deleteIngridient
+        
         ingridientScrollLayout=QVBoxLayout()
         ingridientScrollLayout.addWidget(ingridientLabel)
         ingridientScrollLayout.addWidget(self.ingridientScroll)
 
-        self.ingridientAddScroll=searchField('Add ingridient:',0)
-        self.addIngridientButton=QPushButton('Add')
-        ingridientLayout=QGridLayout()
-        ingridientLayout.addLayout(self.ingridientAddScroll,0,0,1,8)
-        ingridientLayout.addWidget(self.addIngridientButton,1,0,2,1)
+        self.ingridientEntry=searchField('Add ingridient:',0)
+        self.ingridientQuantityEntry=QLineEdit()
+        ingridientQuantityLayout=QHBoxLayout()
+        ingridientQuantityLayout.addWidget(QLabel('Quantity [g]:'))
+        ingridientQuantityLayout.addWidget(self.ingridientQuantityEntry)
+        self.addIngridientButton=QPushButton('Add ingridient')
+        self.addIngridientButton.clicked.connect(self.addIngridient)
+        ingridientLayout=QGridLayout()        
+        ingridientLayout.addLayout(ingridientQuantityLayout,0,0,1,8)
+        ingridientLayout.addLayout(self.ingridientEntry,0,0,1,8)
+        ingridientLayout.addWidget(self.addIngridientButton,2,0,2,1)
         ingridientLayout.setContentsMargins(0,0,0,0)
         self.ingridientWidget=QWidget()
         self.ingridientWidget.setLayout(ingridientLayout)
 
         self.foodContainerScroll=searchField('Add to food container:',0)        
         self.addToFoodContainerButton=QPushButton('Add')
+        self.addToFoodContainerButton.clicked.connect(self.addMixedFoodToFoodContainer)
         foodContainerLayout=QGridLayout()
         foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8)
         foodContainerLayout.addWidget(self.addToFoodContainerButton,1,0,2,1)
@@ -59,7 +76,8 @@ class mixFoodPanel(QWidget):
         self.foodContainerWidget.setLayout(foodContainerLayout)
 
         self.noteArea=QPlainTextEdit()
-        self.addNoteButton=QPushButton('Add')
+        self.addNoteButton=QLabel()
+        # self.addNoteButton.clicked.connect(self.addButtonAction)
         noteLayout=QGridLayout()
         noteLayout.addWidget(self.noteArea,1,0,1,8)
         noteLayout.addWidget(self.addNoteButton,2,0,2,1)
@@ -111,3 +129,19 @@ class mixFoodPanel(QWidget):
             self.ingridientWidget.hide()
             self.foodContainerWidget.hide()
             self.noteWidget.show()
+    def addButtonAction(self):
+        pass
+    def populateFoodContainers(self):
+        pass
+    def populateFoods(self):
+        pass
+    def addIngridient(self):
+        pass
+    def quantityUpdated(self):
+        pass
+    def quantityEntered(self):
+        pass
+    def deleteIngridient(self):
+        pass
+    def addMixedFoodToFoodContainer(self):
+        pass

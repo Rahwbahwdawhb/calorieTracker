@@ -58,6 +58,8 @@ class mainWindow(QWidget):
         elif self.sender()==self.mixFoodButton:
             self.foodPanel.hide()
             self.mixPanel.show()
+            self.mixPanel.populateFoodContainers()
+            self.mixPanel.populateFoods()
             self.foodContainerPanel.hide()
         else:
             self.foodPanel.hide()
