@@ -9,9 +9,25 @@ from PyQt6.QtCore import Qt, QRect
 from frontend.aidFunctionality import *
 
 class PlainTextEdit(QPlainTextEdit):
-    def __init__(self,panel):
-        self.panel=panel
+    def __init__(self,panel,emptyStr=''):
+        self.panel=panel   
+        self.emptyStr=emptyStr             
         super().__init__() 
+        self.setPlainText(self.emptyStr)
+    def focusInEvent(self,event):
+        super(PlainTextEdit, self).focusInEvent(event)
+        if self.toPlainText()=='' or self.toPlainText()==self.emptyStr:
+            self.setPlainText('')
+            chF=self.currentCharFormat()
+            chF.setForeground(QColor(1,1,1))
+            self.setCurrentCharFormat(chF)
+    def focusOutEvent(self,event):
+        super(PlainTextEdit, self).focusOutEvent(event)
+        if self.toPlainText()=='':
+            self.setPlainText(self.emptyStr)
+            chF=self.currentCharFormat()
+            chF.setForeground(QColor(100,100,100))
+            self.setCurrentCharFormat(chF)
     def keyPressEvent(self, event):
         super(PlainTextEdit, self).keyPressEvent(event)
         self.additionalKeyPressEvent()
@@ -28,22 +44,34 @@ class modQLineEdit(QLineEdit):
         pass
 
 class searchField(QGridLayout):
-    def __init__(self,scrollAreaInputStr,zeroRowHeight):
-        super().__init__()
-        self.addWidget(QLabel(scrollAreaInputStr),1,0)
+    def __init__(self,scrollAreaInputStr,zeroRowHeight=None,dropDownAbove=False):
+        super().__init__()        
         self.entryField=modQLineEdit()
         self.entryField.additionalKeyPressEvent=self.additionalKeyPressEvent
         self.entryField.focusInEvent=self.whenEFinFocused
-        self.entryField.focusOutEvent=self.whenEFoutFocused
-        self.addWidget(self.entryField,1,1)
+        self.entryField.focusOutEvent=self.whenEFoutFocused        
         self.scrollList=QListWidget()
         self.scrollList.itemClicked.connect(self.scrollListClicked)
-        self.addWidget(self.scrollList,2,1,1,1)
-        self.addWidget(QLabel(),3,0)
-        self.setRowStretch(1,1)
-        self.setRowStretch(2,2)
-        self.setRowStretch(3,5)
-        self.setRowMinimumHeight(0,zeroRowHeight)
+        if not dropDownAbove:
+            self.addWidget(QLabel(scrollAreaInputStr),1,0)
+            self.addWidget(self.entryField,1,1)
+            self.addWidget(self.scrollList,2,1,1,1)
+            self.addWidget(QLabel(),3,0)
+            self.setRowStretch(1,1)
+            self.setRowStretch(2,2)
+            self.setRowStretch(3,5)
+        else:            
+            self.addWidget(self.scrollList,1,1,1,1)
+            self.addWidget(QLabel(scrollAreaInputStr),2,0)
+            self.addWidget(self.entryField,2,1)
+            # self.addWidget(QLabel(),3,0)
+            self.setRowStretch(1,2)
+            self.setRowStretch(2,1)
+            # self.setRowStretch(3,5)
+        
+        
+        if zeroRowHeight is not None:
+            self.setRowMinimumHeight(0,zeroRowHeight)
         scrollbar=QScrollBar()
         self.scrollList.setVerticalScrollBar(scrollbar)
         self.scrollList.hide()

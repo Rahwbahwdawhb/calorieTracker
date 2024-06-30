@@ -13,7 +13,7 @@ class addFoodPanel(QWidget):
         super().__init__()
         quantityLayout=QGridLayout()        
         self.nameEntry=searchField('Name:',0)
-        quantityLayout.setContentsMargins(0,60,0,0)
+        quantityLayout.setContentsMargins(0,50,0,0)
         self.quantityLineEdits=[]
         for iter,qtn in enumerate(['Quantity [g]']+quantityNames):
             iterLabel=QLabel(qtn)
@@ -28,8 +28,8 @@ class addFoodPanel(QWidget):
             quantityLayout.addWidget(loopLineEdit,1,iter)
             quantityLayout.setColumnStretch(iter,1)
         quantityLayout.setRowMinimumHeight(1,20)
-        quantityLayout.setRowMinimumHeight(3,20)
-        self.foodContainerScroll=searchField('Add to food container:',20) 
+        quantityLayout.setRowMinimumHeight(3,10)
+        self.foodContainerScroll=searchField('Add to food container:',10) 
         topWrapLayout=QGridLayout()
         topWrapLayout.addLayout(quantityLayout,0,0,1,8)
         topWrapLayout.addLayout(self.nameEntry,0,0,1,8)

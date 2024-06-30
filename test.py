@@ -54,6 +54,7 @@ for f in listdir(loadDir):
 loadDir=dirname(abspath(__file__))
 fH_dict=dict()
 foodAttributes=['name','kcal','quantity','protein','carbs','fat','fibers','constituents']
+tableHeaders=['Name','Cal. [kcal]','Qty [g]','Protein [g]','Carbs [g]','Fat [g]','Fibers [g]','constituents']
 clickList=[]
 clickList_details=[]
 from frontend.GUIassembler import *
@@ -96,10 +97,15 @@ def tableItemOnClick_ext(self,item):
         holderType=self.foodListHolder
         itemText=holderType.constituentList.item(item.row(),0).text()    
     elif self.activeDisplayType=='foodMix':
-        self.foodMixHolder.constituentList.selectRow(item.row())
-        foodID=self.foodMixHolder.constituentList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()    
         holderType=self.foodMixHolder
-        itemText=holderType.constituentList.item(item.row(),0).text()    
+        if self.sender()==self.foodMixHolder.constituentList:
+            self.foodMixHolder.constituentList.selectRow(item.row())
+            foodID=self.foodMixHolder.constituentList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()                
+            itemText=holderType.constituentList.item(item.row(),0).text()    
+        else:
+            self.foodMixHolder.ingridientList.selectRow(item.row())
+            foodID=self.foodMixHolder.ingridientList.item(item.row(),self.foodMixHolder.constituentList.columnCount()-1).text()                
+            itemText=holderType.ingridientList.item(item.row(),0).text()    
     else:
         self.foodItemHolder.ingridientList.selectRow(item.row())
         foodID=self.foodItemHolder.ingridientList.item(item.row(),self.foodItemHolder.ingridientList.columnCount()-1).text()    
@@ -119,11 +125,12 @@ def tableItemOnClick_ext(self,item):
         foodStack=False
     if foodStack:
         # self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
-        self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
+        # self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
+        self.populatePanel(foodStack,tableHeaders,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
     else:
         # self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
         # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=[[f.name]+f.getMacros() for f in self.foodDict[foodID].isConstituentOf])
-        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
 def closeDisplayPanel_external(self):    
     clickList.clear()
@@ -139,7 +146,7 @@ def hierarcyClick(self,item):
         foodStack=getFoodStack(fH_clicked_contents,self.foodDict)
         del clickList[1:]
         del clickList_details[1:]
-        self.populatePanel(foodStack,foodAttributes,foodContainerName,'foodContainer',clickList)
+        self.populatePanel(foodStack,tableHeaders,foodContainerName,'foodContainer',clickList)
     else:
         foodID=clickList_details[hierarcyIndex][1]
         updateClickList(item.text(),foodID)
@@ -148,10 +155,10 @@ def hierarcyClick(self,item):
         else:
             foodStack=False
         if foodStack:
-            self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
+            self.populatePanel(foodStack,tableHeaders,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
         else:
             # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
-            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
             
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
 foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
@@ -342,8 +349,9 @@ def deleteFunction(self):
 foodDisplayPanel.deleteButtonAction=deleteFunction
 
 ######################          FIXA DETTA          ############################################
-#i mixed food panel, ha add ingridient å ingridient quantity på samma rad å add to food container på rad under, notearea därunder å minska tomrum
-#lägg till så ser notes å constituent of i mixed foodpanel
+#editera mixed food quantities if food container panel display..
+#-då editerar foodItem och mixedFood, gå till add food/mix food panel och förinställ nuvarande parametrar
+#--då sparar skriv över nuvarande i allFoodDict och ta bort från foodcontainer är i och lägg till i foodcontainer som skrev in från edit..
 #gör separat script för fooddisplaypanel å displaywidgetcreator
 #fixa ny panel där kan göra samling av måltider:
 #-batcha upp separata mål

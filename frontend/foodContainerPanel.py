@@ -100,6 +100,13 @@ class displayWidgetCreator(QWidget):
                 self.constituentList.verticalHeader().setVisible(False)
                 self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
                 self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+                self.ingridientList=QTableWidget()
+                self.ingridientList.setSortingEnabled(True)
+                self.ingridientList.verticalHeader().setVisible(False)
+                self.ingridientList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+                self.ingridientList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
                 qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
                 qtyLayout=QGridLayout()
                 self.qtyLineEdits=[]
@@ -110,11 +117,34 @@ class displayWidgetCreator(QWidget):
                     qtyLayout.addWidget(qle_i,1,i)                    
                 displayLayout.addLayout(qtyLayout,1,0,1,4)
                 displayLayout.addLayout(hierarcyLayout,2,0,1,4)
-                self.noteArea=QPlainTextEdit()
-                constituentListLayout=QVBoxLayout()
-                constituentListLayout.addWidget(QLabel('Constituents:'))
-                constituentListLayout.addWidget(self.constituentList)
-                displayLayout.addLayout(constituentListLayout,3,0,7,4)
+                self.noteArea=PlainTextEdit(self)
+
+                radioButtonLayout=QHBoxLayout()
+                constituentRB=QRadioButton('Constituents:')
+                notesRB=QRadioButton('Notes:')
+                ingridientInRB=QRadioButton('Ingridient in:')                
+                radioButtonLayout.addWidget(constituentRB)
+                radioButtonLayout.addWidget(notesRB)
+                radioButtonLayout.addWidget(ingridientInRB)
+                self.radioButtonList=[constituentRB,notesRB,ingridientInRB]  
+                constituentRB.clicked.connect(self.radioButtonToggle)              
+                notesRB.clicked.connect(self.radioButtonToggle)              
+                ingridientInRB.clicked.connect(self.radioButtonToggle)              
+
+                self.stackLayout=QStackedLayout()
+                self.stackLayout.addWidget(self.constituentList)
+                self.stackLayout.addWidget(self.noteArea)
+                self.stackLayout.addWidget(self.ingridientList)
+
+                constituentRB.clicked.connect(self.radioButtonToggle)
+                constituentRB.click()
+
+                # constituentListLayout=QVBoxLayout()
+                # constituentListLayout.addWidget(QLabel('Constituents:'))
+                # constituentListLayout.addWidget(self.stackLayout)
+                
+                displayLayout.addLayout(radioButtonLayout,3,0,1,4)
+                displayLayout.addLayout(self.stackLayout,4,0,6,4)
                 displayLayout.addWidget(self.closeButton,10,0)
             case 'foodItem':
                 qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
@@ -177,6 +207,7 @@ class foodDisplayPanel(QWidget):
 
         self.foodListHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
         self.foodMixHolder.constituentList.itemClicked.connect(self.tableItemClick_external)
+        self.foodMixHolder.ingridientList.itemClicked.connect(self.tableItemClick_external)
         self.foodItemHolder.ingridientList.itemClicked.connect(self.tableItemClick_external)      
 
         self.foodDisplayLayout.addWidget(self.foodListHolder)
@@ -186,7 +217,7 @@ class foodDisplayPanel(QWidget):
         self.foodDisplayLayout.setCurrentIndex(0)
         self.activeDisplayType='foodContainer'    
         self.panelTitle=''
-    def populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[]):
+    def populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[],dataList3=[]):
         self.panelTitle=panelTitle
         self.clickList=clickList
         self.activeDisplayType=displayType
@@ -213,6 +244,7 @@ class foodDisplayPanel(QWidget):
             case 'foodMix':
                 self.foodDisplayLayout.setCurrentIndex(1)
                 self.foodMixHolder.displayLabel.setText(panelTitle)
+                self.foodMixHolder.noteArea.setPlainText(notes.replace('\\','\n'))
 
                 self.foodMixHolder.constituentList.setRowCount(0)
                 self.foodMixHolder.constituentList.setColumnCount(0)
@@ -235,8 +267,15 @@ class foodDisplayPanel(QWidget):
                         listItem.setForeground(QColor(0,0,0))
                         self.foodMixHolder.constituentList.setItem(i,ii,listItem)
                 self.foodMixHolder.constituentList.setHorizontalHeaderLabels(headers)
+
+                self.foodMixHolder.ingridientList.setRowCount(0)
+                self.foodMixHolder.ingridientList.setColumnCount(0)
+                self.foodMixHolder.ingridientList.setRowCount(len(dataList3))
+                self.foodMixHolder.ingridientList.setColumnCount(len(headers))
+                self.foodMixHolder.ingridientList.setColumnHidden(len(headers)-1,True)
+                self.populateQTableWidget(dataList3,self.foodMixHolder.ingridientList,headers)
                 for i,qle in enumerate(self.foodMixHolder.qtyLineEdits):
-                    qle.setText(str(dataList2[i]))
+                    qle.setText(str(round(dataList2[i],2)))
             case 'foodItem':
                 self.foodDisplayLayout.setCurrentIndex(2)
                 self.foodItemHolder.displayLabel.setText(panelTitle)
@@ -265,6 +304,8 @@ class foodDisplayPanel(QWidget):
         if len(dataList)!=0:
             for i,subList in enumerate(dataList):
                 for ii,item in enumerate(subList):
+                    if ii>0 and ii<7:
+                        item=str(round(float(item),2))
                     listItem=QTableWidgetItem(item)
                     tableWidget.setItem(i,ii,listItem)
                     listItem.setFlags(Qt.ItemFlag.NoItemFlags)
