@@ -19,8 +19,8 @@ class mainWindow(QWidget):
         mainLayout=QGridLayout()
         self.setLayout(mainLayout)
 
-        self.foodPanel=addFoodPanel()
-        self.mixPanel=mixFoodPanel()
+        self.addFoodPanel=addFoodPanel()
+        self.mixFoodPanel=mixFoodPanel()
         self.foodContainerPanel=foodContainerPanel()
 
         self.addFoodButton=QPushButton('Add food')
@@ -35,8 +35,8 @@ class mainWindow(QWidget):
         buttonLayout.addWidget(self.foodContainerButton)
 
         mainLayout.addLayout(buttonLayout,0,0,1,1)
-        mainLayout.addWidget(self.foodPanel,0,1,3,3)
-        mainLayout.addWidget(self.mixPanel,0,1,3,3)
+        mainLayout.addWidget(self.addFoodPanel,0,1,3,3)
+        mainLayout.addWidget(self.mixFoodPanel,0,1,3,3)
         mainLayout.addWidget(self.foodContainerPanel,0,1,3,3)
         mainLayout.setColumnStretch(0,1)
         mainLayout.setColumnStretch(1,3)
@@ -50,20 +50,21 @@ class mainWindow(QWidget):
         pass
     def panelToggler(self):
         if self.sender()==self.addFoodButton:
-            self.foodPanel.show()
-            self.foodPanel.populateFoodContainers()
-            self.foodPanel.populateFoods()
-            self.mixPanel.hide()
+            self.addFoodPanel.show()
+            self.addFoodPanel.populateFoodContainers()
+            self.addFoodPanel.populateFoods()
+            self.addFoodPanel.addFoodActivation()
+            self.mixFoodPanel.hide()
             self.foodContainerPanel.hide()
         elif self.sender()==self.mixFoodButton:
-            self.foodPanel.hide()
-            self.mixPanel.show()
-            self.mixPanel.populateFoodContainers()
-            self.mixPanel.populateFoods()
+            self.addFoodPanel.hide()
+            self.mixFoodPanel.show()
+            self.mixFoodPanel.populateFoodContainers()
+            self.mixFoodPanel.populateFoods()
             self.foodContainerPanel.hide()
         else:
-            self.foodPanel.hide()
-            self.mixPanel.hide()
+            self.addFoodPanel.hide()
+            self.mixFoodPanel.hide()
             self.foodContainerPanel.show()
             self.foodContainerPanelUpdate()
 

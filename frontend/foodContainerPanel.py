@@ -71,14 +71,19 @@ class displayWidgetCreator(QWidget):
         super().__init__()
         displayLayout=QGridLayout()
         self.hierarcyScroll=QListWidget()
+        self.displayType=displayType
         hierarcyLayout=QVBoxLayout()
         hierarcyLayout.addWidget(QLabel('Hierarcy:'))
         hierarcyLayout.addWidget(self.hierarcyScroll)
         self.closeButton=QPushButton('Food container list')    
         self.displayLabel=QLabel('')    
         displayLayout.addWidget(self.displayLabel,0,2)    
-        self.deleteButton=QPushButton('Delete')        
-        displayLayout.addWidget(self.deleteButton,0,3)   
+        self.editButton=QPushButton('Edit')
+        self.editButton.clicked.connect(self.editButtonAction)
+        displayLayout.addWidget(self.editButton,0,3)
+        self.deleteButton=QPushButton('Delete')
+        displayLayout.addWidget(self.deleteButton,0,4)        
+        displayLayoutMaxColumnSpread=5
         match displayType:
             case 'foodContainer':
                 self.constituentList=QTableWidget(self)
@@ -87,11 +92,11 @@ class displayWidgetCreator(QWidget):
                 self.constituentList.verticalHeader().setVisible(False)
                 self.constituentList.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
                 self.constituentList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-                displayLayout.addLayout(hierarcyLayout,1,0,1,4)
+                displayLayout.addLayout(hierarcyLayout,1,0,1,displayLayoutMaxColumnSpread)
                 constituentListLayout=QVBoxLayout()
                 constituentListLayout.addWidget(QLabel('Foods:'))
                 constituentListLayout.addWidget(self.constituentList)
-                displayLayout.addLayout(constituentListLayout,2,0,8,4)
+                displayLayout.addLayout(constituentListLayout,2,0,8,displayLayoutMaxColumnSpread)
                 displayLayout.addWidget(self.closeButton,10,0)
             case 'foodMix':
                 self.constituentList=QTableWidget(self)
@@ -115,8 +120,8 @@ class displayWidgetCreator(QWidget):
                     qle_i=QLabel()
                     self.qtyLineEdits.append(qle_i)
                     qtyLayout.addWidget(qle_i,1,i)                    
-                displayLayout.addLayout(qtyLayout,1,0,1,4)
-                displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                displayLayout.addLayout(qtyLayout,1,0,1,displayLayoutMaxColumnSpread)
+                displayLayout.addLayout(hierarcyLayout,2,0,1,displayLayoutMaxColumnSpread)
                 self.noteArea=PlainTextEdit(self)
 
                 radioButtonLayout=QHBoxLayout()
@@ -143,8 +148,8 @@ class displayWidgetCreator(QWidget):
                 # constituentListLayout.addWidget(QLabel('Constituents:'))
                 # constituentListLayout.addWidget(self.stackLayout)
                 
-                displayLayout.addLayout(radioButtonLayout,3,0,1,4)
-                displayLayout.addLayout(self.stackLayout,4,0,6,4)
+                displayLayout.addLayout(radioButtonLayout,3,0,1,displayLayoutMaxColumnSpread)
+                displayLayout.addLayout(self.stackLayout,4,0,6,displayLayoutMaxColumnSpread)
                 displayLayout.addWidget(self.closeButton,10,0)
             case 'foodItem':
                 qtyLabelNames=['Quantity [g]']+[qtyN for qtyN in quantityNames]
@@ -152,11 +157,12 @@ class displayWidgetCreator(QWidget):
                 self.qtyLineEdits=[]
                 for i,qtl in enumerate(qtyLabelNames):
                     qtyLayout.addWidget(QLabel(qtl),0,i)
-                    qle_i=QLineEdit()
+                    # qle_i=QLineEdit()
+                    qle_i=QLabel()
                     self.qtyLineEdits.append(qle_i)
                     qtyLayout.addWidget(qle_i,1,i)                    
-                displayLayout.addLayout(qtyLayout,1,0,1,4)
-                displayLayout.addLayout(hierarcyLayout,2,0,1,4)
+                displayLayout.addLayout(qtyLayout,1,0,1,displayLayoutMaxColumnSpread)
+                displayLayout.addLayout(hierarcyLayout,2,0,1,displayLayoutMaxColumnSpread)
                 # self.noteArea=QPlainTextEdit()
                 self.noteArea=PlainTextEdit(self)                                       
                 # noteAreaLayout=QVBoxLayout()
@@ -173,16 +179,16 @@ class displayWidgetCreator(QWidget):
                 self.stackLayout.addWidget(self.noteArea)
                 self.stackLayout.addWidget(self.ingridientList)
                 radioButtonLayout=QHBoxLayout()
-                noteRB=QRadioButton('Notes')
-                ingridientsRB=QRadioButton('Ingridient in')
+                noteRB=QRadioButton('Notes:')
+                ingridientsRB=QRadioButton('Ingridient in:')
                 self.radioButtonList=[noteRB,ingridientsRB]
                 noteRB.clicked.connect(self.radioButtonToggle)
                 noteRB.click()
                 ingridientsRB.clicked.connect(self.radioButtonToggle)
                 radioButtonLayout.addWidget(noteRB)
                 radioButtonLayout.addWidget(ingridientsRB)
-                displayLayout.addLayout(radioButtonLayout,3,0,1,4)
-                displayLayout.addLayout(self.stackLayout,4,0,6,4)
+                displayLayout.addLayout(radioButtonLayout,3,0,1,displayLayoutMaxColumnSpread)
+                displayLayout.addLayout(self.stackLayout,4,0,6,displayLayoutMaxColumnSpread)
                 displayLayout.addWidget(self.closeButton,10,0)
         for i in range(11):
             displayLayout.setRowStretch(i,1)
@@ -190,6 +196,8 @@ class displayWidgetCreator(QWidget):
         self.setLayout(displayLayout)
     def radioButtonToggle(self):
         self.stackLayout.setCurrentIndex(self.radioButtonList.index(self.sender()))
+    def editButtonAction(self):
+        pass
     
 class foodDisplayPanel(QWidget):
     def __init__(self):
@@ -298,7 +306,7 @@ class foodDisplayPanel(QWidget):
 
                 for i,qle in enumerate(self.foodItemHolder.qtyLineEdits):
                     qle.setText(str(dataList[i]))
-                    qle.returnPressed.connect(self.foodItemEdits)
+                    # qle.returnPressed.connect(self.foodItemEdits)
                 self.foodItemHolder.noteArea.additionalKeyPressEvent=self.foodItemNoteKeyPressEvent
     def populateQTableWidget(self,dataList,tableWidget,headers):
         if len(dataList)!=0:

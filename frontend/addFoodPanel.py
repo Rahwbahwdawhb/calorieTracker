@@ -13,7 +13,7 @@ class addFoodPanel(QWidget):
         super().__init__()
         quantityLayout=QGridLayout()        
         self.nameEntry=searchField('Name:',0)
-        quantityLayout.setContentsMargins(0,50,0,0)
+        quantityLayout.setContentsMargins(0,30,0,0)
         self.quantityLineEdits=[]
         for iter,qtn in enumerate(['Quantity [g]']+quantityNames):
             iterLabel=QLabel(qtn)
@@ -27,12 +27,15 @@ class addFoodPanel(QWidget):
             self.quantityLineEdits.append(loopLineEdit)
             quantityLayout.addWidget(loopLineEdit,1,iter)
             quantityLayout.setColumnStretch(iter,1)
-        quantityLayout.setRowMinimumHeight(1,20)
-        quantityLayout.setRowMinimumHeight(3,10)
+        quantityLayout.addWidget(QLabel(),2,0)
+        quantityLayout.setRowStretch(0,1)
+        quantityLayout.setRowStretch(1,1)
+        quantityLayout.setRowStretch(2,10)     
+        # quantityLayout.setRowMinimumHeight(1,20)
+        # quantityLayout.setRowMinimumHeight(3,10)
         self.foodContainerScroll=searchField('Add to food container:',10) 
         topWrapLayout=QGridLayout()
-        topWrapLayout.addLayout(quantityLayout,0,0,1,8)
-        topWrapLayout.addLayout(self.nameEntry,0,0,1,8)
+        topWrapLayout.addLayout(quantityLayout,0,0,1,8)        
         
         self.notes=QPlainTextEdit()
         noteLayout=QGridLayout()
@@ -42,18 +45,44 @@ class addFoodPanel(QWidget):
         self.addButton=QPushButton('Add')
         self.addButton.clicked.connect(self.addButtonAction)
         foodContainerLayout=QGridLayout()
-        foodContainerLayout.addLayout(noteLayout,0,0,1,8)
-        foodContainerLayout.addLayout(self.foodContainerScroll,0,0,1,8,alignment=Qt.AlignmentFlag.AlignTop)
+        foodContainerLayout.addLayout(noteLayout,1,0,1,8)
+        foodContainerLayout.addLayout(self.foodContainerScroll,1,0,1,8,alignment=Qt.AlignmentFlag.AlignTop)
         foodContainerLayout.addWidget(self.addButton,2,0,2,1)
-
-        foodPanelLayout=QGridLayout()
-        foodPanelLayout.addLayout(topWrapLayout,0,0)
-        foodPanelLayout.addLayout(foodContainerLayout,1,0)
-        foodPanelLayout.setRowStretch(0,1)
-        foodPanelLayout.setRowStretch(1,3)
+        foodContainerLayout.setRowMinimumHeight(0,100)
         
-        self.setLayout(foodPanelLayout)
+        topWrapLayout.addLayout(foodContainerLayout,0,0,1,8)
+        topWrapLayout.addLayout(self.nameEntry,0,0,1,8)
+
+        
+
+        # foodPanelLayout=QGridLayout()
+        # foodPanelLayout.addLayout(topWrapLayout,0,0)
+        # # foodPanelLayout.addLayout(foodContainerLayout,1,0)
+        # foodPanelLayout.setRowStretch(0,1)
+        # foodPanelLayout.setRowStretch(1,3)
+        
+        # self.setLayout(foodPanelLayout)
+        self.setLayout(topWrapLayout)
         self.hide()
+    def editFoodActivition(self):
+        self.addButton.setText('Save')
+        self.addButton.clicked.connect(self.saveEditedFood)
+        self.editFoodSetup()
+    def addFoodActivation(self):
+        self.addButton.setText('Add')
+        self.addButton.clicked.connect(self.addButtonAction)
+        self.nameEntry.setText('')
+        self.foodContainerScroll.setText('')
+        self.notes.setPlainText('')
+        for i,qle in enumerate(self.quantityLineEdits):
+            if i==0:
+                qle.setText('100')
+            else:
+                qle.setText('0')
+    def saveEditedFood(self):
+        pass
+    def editFoodSetup(self):
+        pass
     def addButtonAction(self):
         pass
     def populateFoodContainers(self):

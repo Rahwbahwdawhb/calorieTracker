@@ -55,12 +55,14 @@ loadDir=dirname(abspath(__file__))
 fH_dict=dict()
 foodAttributes=['name','kcal','quantity','protein','carbs','fat','fibers','constituents']
 tableHeaders=['Name','Cal. [kcal]','Qty [g]','Protein [g]','Carbs [g]','Fat [g]','Fibers [g]','constituents']
+tableHeaders_reordered=['Name','Qty [g]','Cal. [kcal]','Protein [g]','Carbs [g]','Fat [g]','Fibers [g]','constituents']
 clickList=[]
 clickList_details=[]
 from frontend.GUIassembler import *
 # import time
 def getFoodStack(foodList,foodDict):
     foodStack=[]
+    foodStackReordered=[]
     for food in foodList:
         foodID=str(id(food))
         loc=locals()
@@ -68,14 +70,17 @@ def getFoodStack(foodList,foodDict):
         foodData.append(foodID)
         foodDict[foodID]=food
         foodStack.append(foodData)
-    return foodStack
+        foodStackReordered.append([foodData[0],foodData[2],foodData[1]]+foodData[3:])
+    #foodStack has order ['name', 'kcal', 'quantity', 'protein', 'carbs', 'fat', 'fibers',foodID]
+    #foodStackReordered has order ['name', 'quantity', 'kcal', 'protein', 'carbs', 'fat', 'fibers',foodID]
+    return foodStack,foodStackReordered
 def extFCclicked_ext(self,item):
     # data = [['1','2','3','4','abc'],['5','6','7','8','def'],['4','3','2','1','ghi']]
     # self.foodDisplayPanel.populatePanel(data,['w','x','y','z'])
     foodContainerName=item.text()
     fH_clicked_contents=fH_dict[foodContainerName].foodList
     self.foodDisplayPanel.foodDict=dict()
-    foodStack=getFoodStack(fH_clicked_contents,self.foodDisplayPanel.foodDict)
+    foodStack,_=getFoodStack(fH_clicked_contents,self.foodDisplayPanel.foodDict)
         # del foodData
     # print(foodStack)
     clickList.append(foodContainerName)
@@ -120,17 +125,19 @@ def tableItemOnClick_ext(self,item):
     # print(rowStr)
     # print(self.constituentList.item(item.row(),self.constituentList.columnCount()-1).text())    
     if isinstance(self.foodDict[foodID],mixedFood):
-        foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
-    else:
-        foodStack=False
-    if foodStack:
-        # self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=self.foodDict[foodID].getFoodData())
-        # self.populatePanel(foodStack,foodAttributes,self.foodDict[foodID].name,'foodMix',clickList,notes='',dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros())
-        self.populatePanel(foodStack,tableHeaders,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+        _,foodStackReordered=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
+        foodStackMod=[]
+        for i,entry in enumerate(foodStackReordered):
+            kcalMACROpart=[str(float(entry_)/100*self.foodDict[foodID].constituentQuantities[i]) for entry_ in entry[1:-1]]
+            kcalMACROpart[0]=str(self.foodDict[foodID].constituentQuantities[i])
+            foodStackMod.append([entry[0]]+kcalMACROpart+[entry[-1]])
+        _,constituentFoodStack=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict)
+        self.populatePanel(foodStackMod,tableHeaders_reordered,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=constituentFoodStack)
     else:
         # self.populatePanel(self.foodDict[foodID].getFoodData(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
         # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=[[f.name]+f.getMacros() for f in self.foodDict[foodID].isConstituentOf])
-        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+        _,constituentFoodStack=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict)
+        self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders_reordered,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=constituentFoodStack)
         # self.kcal,self.protein,self.carbs,self.fat,self.fibers
 def closeDisplayPanel_external(self):    
     clickList.clear()
@@ -143,7 +150,7 @@ def hierarcyClick(self,item):
     if clickList_details[hierarcyIndex][0]=='foodContainer':
         foodContainerName=clickList[hierarcyIndex]
         fH_clicked_contents=fH_dict[foodContainerName].foodList
-        foodStack=getFoodStack(fH_clicked_contents,self.foodDict)
+        foodStack,_=getFoodStack(fH_clicked_contents,self.foodDict)
         del clickList[1:]
         del clickList_details[1:]
         self.populatePanel(foodStack,tableHeaders,foodContainerName,'foodContainer',clickList)
@@ -151,14 +158,18 @@ def hierarcyClick(self,item):
         foodID=clickList_details[hierarcyIndex][1]
         updateClickList(item.text(),foodID)
         if isinstance(self.foodDict[foodID],mixedFood):
-            foodStack=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
+            _,foodStackReordered=getFoodStack(self.foodDict[foodID].constituents,self.foodDict)
+            foodStackMod=[]
+            for i,entry in enumerate(foodStackReordered):
+                kcalMACROpart=[str(float(entry_)/100*self.foodDict[foodID].constituentQuantities[i]) for entry_ in entry[1:-1]]
+                kcalMACROpart[0]=str(self.foodDict[foodID].constituentQuantities[i])
+                foodStackMod.append([entry[0]]+kcalMACROpart+[entry[-1]])
+            _,constituentFoodStack=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict)
+            self.populatePanel(foodStackMod,tableHeaders_reordered,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=constituentFoodStack)
         else:
-            foodStack=False
-        if foodStack:
-            self.populatePanel(foodStack,tableHeaders,self.foodDict[foodID].name,'foodMix',clickList,notes=self.foodDict[foodID].notes,dataList2=[self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),dataList3=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
-        else:
-            # self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),foodAttributes,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes)
-            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict))
+            _,constituentFoodStack=getFoodStack(self.foodDict[foodID].isConstituentOf,self.foodDict)
+            self.populatePanel([self.foodDict[foodID].quantity]+self.foodDict[foodID].getMacros(),tableHeaders_reordered,self.foodDict[foodID].name,'foodItem',clickList,self.foodDict[foodID].notes,dataList2=constituentFoodStack)
+            
             
 foodContainerPanel.extFCclicked_external=extFCclicked_ext
 foodDisplayPanel.tableItemClick_external=tableItemOnClick_ext
@@ -348,6 +359,46 @@ def deleteFunction(self):
         
 foodDisplayPanel.deleteButtonAction=deleteFunction
 
+mainWindowObject=None
+itemToBeEditied=None
+currentFoodHolder=None
+itemToHolderDictionary=dict()
+def editButtonAction(self):
+    global itemToBeEditied, currentFoodHolder
+    if self.displayType=='foodContainer':        
+        print(1,mainWindowObject.foodContainerPanel)  
+    elif self.displayType=='foodMix':
+        print(2,mainWindowObject.mixFoodPanel)  
+    else:
+        mainWindowObject.mixFoodPanel.hide()
+        mainWindowObject.foodContainerPanel.hide()
+        mainWindowObject.addFoodPanel.show()
+        # mainWindowObject.addFoodPanel.editFoodActivition()
+        mainWindowObject.addFoodPanel.addButton.setText('Save')
+        mainWindowObject.addFoodPanel.addButton.clicked.disconnect()
+        mainWindowObject.addFoodPanel.addButton.clicked.connect(mainWindowObject.addFoodPanel.saveEditedFood)        
+        foodItemName=self.displayLabel.text()
+        itemToBeEditied=allFoodDictionary[foodItemName]    
+        foodHolderName=itemToHolderDictionary[foodItemName]    
+        currentFoodHolder=fH_dict[foodHolderName]
+        for qle,qty in zip(mainWindowObject.addFoodPanel.quantityLineEdits,[100]+itemToBeEditied.getMacros()):
+            qle.setText(str(qty))
+        mainWindowObject.addFoodPanel.nameEntry.setText(foodItemName)
+        mainWindowObject.addFoodPanel.notes.setPlainText(itemToBeEditied.notes)
+        mainWindowObject.addFoodPanel.foodContainerScroll.setText(foodHolderName)
+        mainWindowObject.addFoodPanel.populateFoodContainers()
+        mainWindowObject.addFoodPanel.populateFoods()
+displayWidgetCreator.editButtonAction=editButtonAction
+
+
+def saveEditedFoodItem(self):    
+    qty=float(self.quantityLineEdits[0].text())
+    macroDict=dict()
+    for macroName,qle in zip(['kcal','protein','carbs','fat','fibers'],self.quantityLineEdits):
+        macroDict[macroName]=float(qle.text())
+    itemToBeEditied.updateMacros(qty,macroDict)
+    self.addFoodActivation()
+addFoodPanel.saveEditedFood=saveEditedFoodItem
 ######################          FIXA DETTA          ############################################
 #editera mixed food quantities if food container panel display..
 #-då editerar foodItem och mixedFood, gå till add food/mix food panel och förinställ nuvarande parametrar
@@ -358,6 +409,9 @@ foodDisplayPanel.deleteButtonAction=deleteFunction
 #-möjlighet att ha target macros att jfr m
 #-piechart över hur kalorier är fördelade
 #-på nåt sätt kunna nesta i godtyckligt antal nivåer
+#städa upp: 
+#för guiklasser som ska kunna connecta m andra, ge referens till mainwindow och så får söka genom det trädet..?
+#ha flera block som overridear fördefinierade klassfunktioner -ett för varje klasstyp/såna som enkelt grupperas?
 
 
 
@@ -384,15 +438,19 @@ foodDisplayPanel.deleteButtonAction=deleteFunction
 
 app=frontendSetup()
 app.mW.foodContainerPanel.extFCclicked_set()
+mainWindowObject=app.mW
 
 allFoodDictionary=dict()
 constituentOfDictionary=dict()
+
 for f in listdir(loadDir):
     if f.endswith('.json'):
         foodHolderName=f.split('.')[0]
         fH_dict[foodHolderName]=foodHolder(locationToSave=loadDir,filename=f[0:-5],allFoodDictionary=allFoodDictionary,constituentOfDictionary=constituentOfDictionary)
         fH_dict[foodHolderName].appendFoodFromFile(loadDir,f)
         app.mW.foodContainerPanel.addExtFCtoScroll(foodHolderName)
+        for food in fH_dict[foodHolderName].foodList:
+            itemToHolderDictionary[food.name]=foodHolderName
 # sortFoodList(fH_dict['meat'].foodList,'kcal',False)
 # for food in fH_dict['meat'].foodList:
 #     food.showNutrients()

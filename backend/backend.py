@@ -193,6 +193,10 @@ class foodItem:
         return [self.kcal,self.protein,self.carbs,self.fat,self.fibers]
     def updateNote(self,noteStr):
         self.notes=noteStr
+    def updateMacros(self,qty,macroDict):
+        for key in macroDict:
+            self.__dict__[key]=macroDict[key]
+        self.updateAttribute('quantity',qty)
     def updateAttribute(self,attributeStr,newAttributeValue):
         if attributeStr=='quantity':
             for macroStr in self.macroStrs:
