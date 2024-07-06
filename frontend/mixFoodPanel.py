@@ -5,7 +5,10 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QG
                               QHeaderView,QAbstractScrollArea,QStackedLayout,QScrollBar,QSpacerItem)
 from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
-from .aidFunctionality import *
+try:
+    from .aidFunctionality import *
+except:
+    from aidFunctionality import *
 
 quantityNames=['Quantity [g]','Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
 ingridientInfo=['Name','Qty [g]','Cal. [kcal]','Protein [g]','Carbs [g]','Fat [g]','Fibers [g]']

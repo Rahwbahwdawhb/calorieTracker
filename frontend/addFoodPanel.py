@@ -5,7 +5,10 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QG
                               QHeaderView,QAbstractScrollArea,QStackedLayout,QScrollBar)
 from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
-from .aidFunctionality import *
+try:
+    from .aidFunctionality import *
+except:
+    from aidFunctionality import *
 
 quantityNames=['Calories [kcal]','Protein [g]','Carbohydrates [g]','Fat [g]','Fibers [g]']
 class addFoodPanel(QWidget):
@@ -27,7 +30,7 @@ class addFoodPanel(QWidget):
             self.quantityLineEdits.append(loopLineEdit)
             quantityLayout.addWidget(loopLineEdit,1,iter)
             quantityLayout.setColumnStretch(iter,1)
-        quantityLayout.addWidget(QLabel(),2,0)
+        # quantityLayout.addWidget(QLabel(),2,0)
         quantityLayout.setRowStretch(0,1)
         quantityLayout.setRowStretch(1,1)
         quantityLayout.setRowStretch(2,10)     
@@ -47,21 +50,11 @@ class addFoodPanel(QWidget):
         foodContainerLayout=QGridLayout()
         foodContainerLayout.addLayout(noteLayout,1,0,1,8)
         foodContainerLayout.addLayout(self.foodContainerScroll,1,0,1,8,alignment=Qt.AlignmentFlag.AlignTop)
-        foodContainerLayout.addWidget(self.addButton,2,0,2,1)
+        foodContainerLayout.addWidget(self.addButton,2,7,2,1)
         foodContainerLayout.setRowMinimumHeight(0,100)
         
         topWrapLayout.addLayout(foodContainerLayout,0,0,1,8)
         topWrapLayout.addLayout(self.nameEntry,0,0,1,8)
-
-        
-
-        # foodPanelLayout=QGridLayout()
-        # foodPanelLayout.addLayout(topWrapLayout,0,0)
-        # # foodPanelLayout.addLayout(foodContainerLayout,1,0)
-        # foodPanelLayout.setRowStretch(0,1)
-        # foodPanelLayout.setRowStretch(1,3)
-        
-        # self.setLayout(foodPanelLayout)
         self.setLayout(topWrapLayout)
         self.hide()
     def editFoodActivition(self):

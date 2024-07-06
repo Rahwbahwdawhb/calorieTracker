@@ -5,10 +5,16 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QG
                               QHeaderView,QAbstractScrollArea,QStackedLayout,QScrollBar)
 from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
-from .aidFunctionality import *
-from .foodContainerPanel import *
-from .addFoodPanel import *
-from .mixFoodPanel import *
+if __name__=='__main__':
+    from aidFunctionality import *
+    from foodContainerPanel import *
+    from addFoodPanel import *
+    from mixFoodPanel import *
+else:
+    from .aidFunctionality import *
+    from .foodContainerPanel import *
+    from .addFoodPanel import *
+    from .mixFoodPanel import *
 
 
 class mainWindow(QWidget):
@@ -78,6 +84,9 @@ class frontendSetup(QApplication):
         self.exec()
 
 if __name__=='__main__':
+    import os
+    pathList=os.path.dirname(__file__).split('\\')
+    os.chdir('\\'.join(pathList[:-1]))
     app=frontendSetup()
     app.startGUI()
 

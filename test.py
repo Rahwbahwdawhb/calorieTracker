@@ -391,18 +391,50 @@ def editButtonAction(self):
 displayWidgetCreator.editButtonAction=editButtonAction
 
 
-def saveEditedFoodItem(self):    
+def saveEditedFoodItem(self):        
     qty=float(self.quantityLineEdits[0].text())
     macroDict=dict()
-    for macroName,qle in zip(['kcal','protein','carbs','fat','fibers'],self.quantityLineEdits):
+    for macroName,qle in zip(['kcal','protein','carbs','fat','fibers'],self.quantityLineEdits[1:]):
         macroDict[macroName]=float(qle.text())
-    itemToBeEditied.updateMacros(qty,macroDict)
-    self.addFoodActivation()
+    print(macroDict)
+    newName=self.nameEntry.text()
+    nameOk=False
+    if newName==itemToBeEditied.name:
+        nameOk=True
+    else:
+        if newName not in allFoodDictionary.keys() and newName!=nonUniqueStr:            
+            nameOk=True
+        else:
+            self.nameEntry.setText(nonUniqueStr)            
+    newFoodHolderName=self.foodContainerScroll.text()
+    foodHolderOk=False
+    if newFoodHolderName==currentFoodHolder.name:
+        foodHolderOk=True
+    else:
+        if newFoodHolderName in fH_dict.keys():
+            foodHolderOk=True
+    if foodHolderOk and nameOk:
+        del allFoodDictionary[itemToBeEditied.name]
+        del itemToHolderDictionary[itemToBeEditied.name]
+        itemToHolderDictionary[newName]=newFoodHolderName
+        allFoodDictionary[newName]=itemToBeEditied
+        itemToBeEditied.name=newName
+        
+        fH_dict[currentFoodHolder.name].removeFood(itemToBeEditied)
+        fH_dict[newFoodHolderName].addFood(itemToBeEditied)  
+        itemToBeEditied.updateMacros(qty,macroDict)
+        itemToBeEditied.updateNote(self.notes.toPlainText())
+        
+        self.addFoodActivation()
+        self.hide()
+        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodItemHolder.closeButton.click()
+        mainWindowObject.foodContainerButton.click()
+    
 addFoodPanel.saveEditedFood=saveEditedFoodItem
 ######################          FIXA DETTA          ############################################
-#editera mixed food quantities if food container panel display..
-#-då editerar foodItem och mixedFood, gå till add food/mix food panel och förinställ nuvarande parametrar
-#--då sparar skriv över nuvarande i allFoodDict och ta bort från foodcontainer är i och lägg till i foodcontainer som skrev in från edit..
+#fixa så kan editera mixedFood i mixedFoodPanel
+#fixa så kan editera foodcontainerpanel (ändra namn, radera flera foods)
+#displaywidget verkar vara bredare än add-/mixfoodpanel/foodcontainerlist, fixa så har samma bredd!
 #gör separat script för fooddisplaypanel å displaywidgetcreator
 #fixa ny panel där kan göra samling av måltider:
 #-batcha upp separata mål

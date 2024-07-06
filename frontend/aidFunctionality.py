@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QHBoxLayout, QVBoxLayout, QG
                               QHeaderView,QAbstractScrollArea,QStackedLayout,QScrollBar)
 from PyQt6.QtGui import QCloseEvent, QFont,QBrush,QColor,QTextCursor
 from PyQt6.QtCore import Qt, QRect
-from frontend.aidFunctionality import *
+# from frontend.aidFunctionality import *
 
 class PlainTextEdit(QPlainTextEdit):
     def __init__(self,panel,emptyStr=''):

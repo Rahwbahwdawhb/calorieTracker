@@ -153,6 +153,11 @@ class foodHolder:
                         newFoodItem.assignFoodHolder(self)
     def addFood(self,food):
         self.foodList.append(food)
+    def removeFood(self,food):
+        try:
+            self.foodList.remove(food)
+        except:
+            pass
     def saveToFile(self):
         with open(join(self.saveLocation,self.name+'.json'),'w') as f:
             for food in self.foodList:
