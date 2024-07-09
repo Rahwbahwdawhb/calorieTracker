@@ -66,6 +66,7 @@ class mainWindow(QWidget):
             self.addFoodPanel.hide()
             self.mixFoodPanel.show()
             self.mixFoodPanel.populateFoodContainers()
+            self.mixFoodPanel.addFoodActivation()
             self.mixFoodPanel.populateFoods()
             self.foodContainerPanel.hide()
         else:

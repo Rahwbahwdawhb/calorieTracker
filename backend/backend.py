@@ -299,7 +299,10 @@ class mixedFood:
             self.foodHolder.foodList.remove(self)
         except:
             pass
-            
+    def clearConstituents(self):
+        for food in self.constituents:
+            food.removeFoodReference(self)
+            self.constituents.remove(food)
 
 # class foodItem:
 #     def __init__(self,name='',quantity=100,kcal=0,protein=0,carbs=0,fat=0,fibers=None,constituents=[],notes='') -> None:

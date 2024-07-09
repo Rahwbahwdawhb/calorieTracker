@@ -186,6 +186,7 @@ foodContainerPanel.createFC=createFC
 nonUniqueStr='There\'s already a food item with this name, please change it!'
 fcEnterStr='Enter existing food container!'
 def addFoodButtonAction(self):
+    print('hej')
     qtys=[]
     for ql in self.quantityLineEdits:
         qtys.append(float(ql.text()))
@@ -194,14 +195,15 @@ def addFoodButtonAction(self):
             newFood=foodItem(name=self.nameEntry.text(),quantity=qtys[0],kcal=qtys[1],protein=qtys[2],carbs=qtys[3],fat=qtys[4],fibers=qtys[5],notes=self.notes.toPlainText())
             allFoodDictionary[self.nameEntry.text()]=newFood
             fH_dict[self.foodContainerScroll.entryField.text()].addFood(newFood)
+            itemToHolderDictionary[self.nameEntry.text()]=fH_dict[self.foodContainerScroll.entryField.text()].name
             for iter,ql in enumerate(self.quantityLineEdits):
                 if iter==0:
                     ql.setText('100')
                 else:
                     ql.setText('0')
-                self.nameEntry.setText('')
-                self.foodContainerScroll.entryField.setText('')
-                self.notes.setPlainText('')
+            self.nameEntry.setText('')
+            self.foodContainerScroll.entryField.setText('')
+            self.notes.setPlainText('')
         else:
             self.foodContainerScroll.entryField.setText(fcEnterStr)
     else:
@@ -331,6 +333,7 @@ def addMixed(self):
             
             allFoodDictionary[self.nameEntry.text()]=newFood
             fH_dict[self.foodContainerScroll.entryField.text()].addFood(newFood)
+            itemToHolderDictionary[self.nameEntry.text()]=fH_dict[self.foodContainerScroll.entryField.text()].name
             
             self.nameEntry.setText('')
             self.foodContainerScroll.entryField.setText('')
@@ -368,7 +371,28 @@ def editButtonAction(self):
     if self.displayType=='foodContainer':        
         print(1,mainWindowObject.foodContainerPanel)  
     elif self.displayType=='foodMix':
-        print(2,mainWindowObject.mixFoodPanel)  
+        mainWindowObject.mixFoodPanel.show()
+        mainWindowObject.foodContainerPanel.hide()
+        mainWindowObject.addFoodPanel.hide()
+        foodItemName=self.displayLabel.text()
+        itemToBeEditied=allFoodDictionary[foodItemName]    
+        foodHolderName=itemToHolderDictionary[foodItemName]
+        for qle,qty in zip(mainWindowObject.mixFoodPanel.quantityStatLabels,[100]+itemToBeEditied.getMacros()):
+            qle.setText(str(qty))
+        mainWindowObject.mixFoodPanel.nameEntry.setText(foodItemName)
+        mainWindowObject.mixFoodPanel.noteArea.setPlainText(itemToBeEditied.notes)
+        mainWindowObject.mixFoodPanel.foodContainerScroll.setText(foodHolderName)
+        mainWindowObject.mixFoodPanel.populateFoodContainers()
+        mainWindowObject.mixFoodPanel.populateFoods()
+
+        currentFoodHolder=fH_dict[foodHolderName]
+        for food,qty in zip(itemToBeEditied.constituents,itemToBeEditied.constituentQuantities):
+            mainWindowObject.mixFoodPanel.ingridientEntry.setText(food.name)
+            mainWindowObject.mixFoodPanel.ingridientQuantityEntry.setText(str(qty))
+            mainWindowObject.mixFoodPanel.addIngridientButton.click()
+            
+        mainWindowObject.mixFoodPanel.saveToFoodContainerButton.clicked.disconnect()
+        mainWindowObject.mixFoodPanel.saveToFoodContainerButton.clicked.connect(mainWindowObject.mixFoodPanel.saveEditedFood)
     else:
         mainWindowObject.mixFoodPanel.hide()
         mainWindowObject.foodContainerPanel.hide()
@@ -379,7 +403,7 @@ def editButtonAction(self):
         mainWindowObject.addFoodPanel.addButton.clicked.connect(mainWindowObject.addFoodPanel.saveEditedFood)        
         foodItemName=self.displayLabel.text()
         itemToBeEditied=allFoodDictionary[foodItemName]    
-        foodHolderName=itemToHolderDictionary[foodItemName]    
+        foodHolderName=itemToHolderDictionary[foodItemName]   
         currentFoodHolder=fH_dict[foodHolderName]
         for qle,qty in zip(mainWindowObject.addFoodPanel.quantityLineEdits,[100]+itemToBeEditied.getMacros()):
             qle.setText(str(qty))
@@ -392,11 +416,18 @@ displayWidgetCreator.editButtonAction=editButtonAction
 
 
 def saveEditedFoodItem(self):        
-    qty=float(self.quantityLineEdits[0].text())
+    if isinstance(self,addFoodPanel):
+        qty=float(self.quantityLineEdits[0].text())
+        loopQties=self.quantityLineEdits[1:]
+        panelToClick=mainWindowObject.foodContainerPanel.foodDisplayPanel.foodItemHolder
+        noteStr=self.notes.toPlainText()
+    else:
+        qty=float(self.quantityStatLabels[0].text())
+        loopQties=self.quantityStatLabels[1:]
+        panelToClick=mainWindowObject.foodContainerPanel.foodDisplayPanel.foodMixHolder
+        noteStr=self.noteArea.toPlainText()
     macroDict=dict()
-    for macroName,qle in zip(['kcal','protein','carbs','fat','fibers'],self.quantityLineEdits[1:]):
-        macroDict[macroName]=float(qle.text())
-    print(macroDict)
+    
     newName=self.nameEntry.text()
     nameOk=False
     if newName==itemToBeEditied.name:
@@ -421,18 +452,31 @@ def saveEditedFoodItem(self):
         itemToBeEditied.name=newName
         
         fH_dict[currentFoodHolder.name].removeFood(itemToBeEditied)
-        fH_dict[newFoodHolderName].addFood(itemToBeEditied)  
-        itemToBeEditied.updateMacros(qty,macroDict)
-        itemToBeEditied.updateNote(self.notes.toPlainText())
+        fH_dict[newFoodHolderName].addFood(itemToBeEditied)          
+        
+
+        if isinstance(self,addFoodPanel):
+            for macroName,qle in zip(['kcal','protein','carbs','fat','fibers'],loopQties):
+                macroDict[macroName]=float(qle.text())
+            print(macroDict)
+            itemToBeEditied.updateMacros(qty,macroDict)
+            itemToBeEditied.updateNote(noteStr)
+        else:
+            itemToBeEditied.clearConstituents()
+            while self.ingridientScroll.rowCount()>0:
+                itemToBeEditied.addConstituent(allFoodDictionary[self.ingridientScroll.item(0,0).text()],float(self.ingridientScroll.item(0,1).text()))
+                self.ingridientScroll.removeRow(0)     
+            itemToBeEditied.updateNotes(noteStr)
         
         self.addFoodActivation()
         self.hide()
-        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodItemHolder.closeButton.click()
+        panelToClick.closeButton.click()
         mainWindowObject.foodContainerButton.click()
     
 addFoodPanel.saveEditedFood=saveEditedFoodItem
+mixFoodPanel.saveEditedFood=saveEditedFoodItem
 ######################          FIXA DETTA          ############################################
-#fixa så kan editera mixedFood i mixedFoodPanel
+#i plaintextedit (för )
 #fixa så kan editera foodcontainerpanel (ändra namn, radera flera foods)
 #displaywidget verkar vara bredare än add-/mixfoodpanel/foodcontainerlist, fixa så har samma bredd!
 #gör separat script för fooddisplaypanel å displaywidgetcreator

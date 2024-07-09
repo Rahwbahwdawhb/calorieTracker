@@ -59,10 +59,12 @@ class addFoodPanel(QWidget):
         self.hide()
     def editFoodActivition(self):
         self.addButton.setText('Save')
+        self.addButton.clicked.disconnect()
         self.addButton.clicked.connect(self.saveEditedFood)
         self.editFoodSetup()
     def addFoodActivation(self):
         self.addButton.setText('Add')
+        self.addButton.clicked.disconnect()
         self.addButton.clicked.connect(self.addButtonAction)
         self.nameEntry.setText('')
         self.foodContainerScroll.setText('')

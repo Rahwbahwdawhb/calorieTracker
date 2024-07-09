@@ -184,3 +184,17 @@ class mixFoodPanel(QWidget):
         pass
     def addMixedFoodToFoodContainer(self):
         pass
+    def saveEditedFood(self):
+        pass
+    def addFoodActivation(self):
+        # self.saveToFoodContainerButton.setText('Add')
+        self.saveToFoodContainerButton.clicked.disconnect()
+        self.saveToFoodContainerButton.clicked.connect(self.addMixedFoodToFoodContainer)
+        self.nameEntry.setText('')
+        self.foodContainerScroll.setText('')
+        self.ingridientEntry.setText('')
+        self.ingridientQuantityEntry.setText('')
+        self.noteArea.setPlainText('')
+        self.ingridientScroll.setRowCount(0)
+        for qle in self.quantityStatLabels:
+            qle.setText('0')
