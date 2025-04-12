@@ -303,6 +303,9 @@ class mixedFood:
         for food in self.constituents:
             food.removeFoodReference(self)
             self.constituents.remove(food)
+        self.constituentQuantities.clear()
+        self.resetMacros()
+            
 
 # class foodItem:
 #     def __init__(self,name='',quantity=100,kcal=0,protein=0,carbs=0,fat=0,fibers=None,constituents=[],notes='') -> None:

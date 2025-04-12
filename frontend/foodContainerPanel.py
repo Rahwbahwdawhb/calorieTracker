@@ -27,7 +27,7 @@ class foodContainerPanel(QWidget):
         self.createButton.setDisabled(True)
         self.createButton.clicked.connect(self.createFC)
         nameLayout=QHBoxLayout()
-        nameLayout.addWidget(QLabel('Search:'))
+        nameLayout.addWidget(QLabel('Name:'))
         nameLayout.addWidget(self.searchField)
         nameLayout.addWidget(self.createButton)
         foodContainerLayout.addLayout(nameLayout,5,0,1,4)           
