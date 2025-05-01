@@ -85,7 +85,7 @@ def extFCclicked_ext(self,item):
     # print(foodStack)
     clickList.append(foodContainerName)
     clickList_details.append(('foodContainer',''))
-    self.foodDisplayPanel.populatePanel(foodStack,foodAttributes,foodContainerName,'foodContainer',clickList)
+    self.foodDisplayPanel.populatePanel(foodStack,tableHeaders,foodContainerName,'foodContainer',clickList)
     self.stackLayout.setCurrentIndex(1)
 def updateClickList(clickText,foodID):
     if clickText in clickList:
@@ -272,7 +272,7 @@ def addIngridient(self):
             nIngridients=self.ingridientScroll.rowCount()    
             self.ingridientScroll.setRowCount(nIngridients+1)            
             nameCellEntry=QTableWidgetItem(self.ingridientEntry.text())
-            nameCellEntry.setFlags(Qt.ItemFlag.NoItemFlags)
+            nameCellEntry.setFlags(Qt.ItemFlag.NoItemFlags)            
             nameCellEntry.setForeground(QColor(0,0,0))
             self.ingridientScroll.setItem(nIngridients,0,nameCellEntry)
             self.ingridientScroll.setItem(nIngridients,1,QTableWidgetItem(self.ingridientQuantityEntry.text()))
@@ -316,7 +316,8 @@ mixFoodPanel.quantityUpdated=quantityUpdated
 mixFoodPanel.quantityEntered=quantityEntered
 mixFoodPanel.deleteIngridient=deleteIngridient
 
-def addMixed(self):    
+def addMixed(self):
+    print('hejhej')
     if self.nameEntry.text() not in allFoodDictionary.keys() and self.nameEntry.text()!=nonUniqueStr:
         if self.foodContainerScroll.entryField.text() in fH_dict.keys():            
             newFood=mixedFood()
@@ -358,7 +359,7 @@ def deleteFunction(self):
             activeDisplay=self.foodItemHolder        
         allFoodDictionary[self.panelTitle].removeFoodToFoodReferences()
         del allFoodDictionary[self.panelTitle]
-        self.hierarcyClick_external(activeDisplay.hierarcyScroll.item(activeDisplay.hierarcyScroll.count()-2))        
+        self.hierarcyClick_external(activeDisplay.hierarcyScroll.item(activeDisplay.hierarcyScroll.count()-2))    
         
 foodDisplayPanel.deleteButtonAction=deleteFunction
 
@@ -366,10 +367,57 @@ mainWindowObject=None
 itemToBeEditied=None
 currentFoodHolder=None
 itemToHolderDictionary=dict()
+import PyQt6.QtWidgets as qw
+def foodContainerEditItemClicked(self):
+    a=mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.constituentList
+    other_column_indices=[i for i in range(a.columnCount()-1) if i !=self.column()]
+    if a.item(self.row(),other_column_indices[0]) in a.selectedItems():
+        for i in other_column_indices:
+            a.item(self.row(),i).setSelected(False)
+    else:
+        a.selectRow(self.row())
+def foodContainerEditDeleteButtonClicked(self):    
+    a=mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.constituentList
+    if len(a.selectedItems())>0:
+        for nameItem in a.selectedItems()[::7]:
+            food_name=nameItem.text()
+            print(food_name)
+            allFoodDictionary[food_name].removeFoodToFoodReferences()
+            del allFoodDictionary[food_name]
+            a.removeRow(nameItem.row())
+    1
 def editButtonAction(self):
+    print(self)
     global itemToBeEditied, currentFoodHolder
-    if self.displayType=='foodContainer':        
-        print(1,mainWindowObject.foodContainerPanel)  
+    if self.displayType=='foodContainer':
+        print(1,mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder)
+        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.hierarcyScroll.hide()
+        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.hierarcyLabel.hide()
+        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.constituentList.itemClicked.disconnect()
+        mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.constituentList.itemClicked.connect(foodContainerEditItemClicked)
+        a=mainWindowObject.foodContainerPanel.foodDisplayPanel.foodListHolder.constituentList      
+        for i in range(a.rowCount()):
+            for ii in range(a.columnCount()):
+                a.item(i,ii).setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+        a.setSelectionMode(qw.QAbstractItemView.SelectionMode.MultiSelection)
+        #rebind edit and delete buttons        
+        self.editButton.setText('Back')
+        def back_button_pressed():
+            print(1)
+            for i in range(a.rowCount()):
+                for ii in range(a.columnCount()):
+                    a.item(i,ii).setFlags(Qt.ItemFlag.NoItemFlags)
+            mainWindowObject.foodContainerPanel.foodDisplayPanel.itemClickedReset(a) #reset itemclick behavior, seems like it has to be done on the object
+            self.editButtonReset() #reset edit button behavior, seems like it has to be done on the object
+            # displayWidgetCreator.editButtonAction=editButtonAction
+        # displayWidgetCreator.editButtonAction=back_button_pressed
+        self.editButton.clicked.disconnect()
+        self.editButton.clicked.connect(back_button_pressed)
+        self.deleteButton.clicked.disconnect()
+        self.deleteButton.clicked.connect(foodContainerEditDeleteButtonClicked)
+        # populatePanel(self,dataList,headers,panelTitle,displayType,clickList,notes='',dataList2=[],dataList3=[])
+        # self.populateQTableWidget(dataList,self.foodListHolder.constituentList,headers)
+        # populateQTableWidget(dataList,tableWidget,headers)
     elif self.displayType=='foodMix':
         mainWindowObject.mixFoodPanel.show()
         mainWindowObject.foodContainerPanel.hide()
@@ -377,8 +425,6 @@ def editButtonAction(self):
         foodItemName=self.displayLabel.text()
         itemToBeEditied=allFoodDictionary[foodItemName]    
         foodHolderName=itemToHolderDictionary[foodItemName]
-        for qle,qty in zip(mainWindowObject.mixFoodPanel.quantityStatLabels,[100]+itemToBeEditied.getMacros()):
-            qle.setText(str(qty))
         mainWindowObject.mixFoodPanel.nameEntry.setText(foodItemName)
         mainWindowObject.mixFoodPanel.noteArea.setPlainText(itemToBeEditied.notes)
         mainWindowObject.mixFoodPanel.foodContainerScroll.setText(foodHolderName)
@@ -472,7 +518,8 @@ def saveEditedFoodItem(self):
         self.hide()
         panelToClick.closeButton.click()
         mainWindowObject.foodContainerButton.click()
-    
+# addFoodPanel.addButtonAction=saveEditedFoodItem
+# mixFoodPanel.addMixedFoodToFoodContainer=saveEditedFoodItem
 addFoodPanel.saveEditedFood=saveEditedFoodItem
 mixFoodPanel.saveEditedFood=saveEditedFoodItem
 ######################          FIXA DETTA          ############################################

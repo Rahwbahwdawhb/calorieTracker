@@ -76,7 +76,8 @@ class displayWidgetCreator(QWidget):
         self.hierarcyScroll=QListWidget()
         self.displayType=displayType
         hierarcyLayout=QVBoxLayout()
-        hierarcyLayout.addWidget(QLabel('Hierarcy:'))
+        self.hierarcyLabel=QLabel('Hierarcy:')
+        hierarcyLayout.addWidget(self.hierarcyLabel)
         hierarcyLayout.addWidget(self.hierarcyScroll)
         self.closeButton=QPushButton('Food container list')    
         self.displayLabel=QLabel('')    
@@ -89,7 +90,7 @@ class displayWidgetCreator(QWidget):
         displayLayoutMaxColumnSpread=5
         match displayType:
             case 'foodContainer':
-                self.constituentList=QTableWidget(self)
+                self.constituentList=QTableWidget(self)                
                 # self.constituentList.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
                 self.constituentList.setSortingEnabled(True)
                 self.constituentList.verticalHeader().setVisible(False)
@@ -201,6 +202,10 @@ class displayWidgetCreator(QWidget):
         self.stackLayout.setCurrentIndex(self.radioButtonList.index(self.sender()))
     def editButtonAction(self):
         pass
+    def editButtonReset(self):
+        self.editButton.setText('Edit')
+        self.editButton.clicked.disconnect()
+        self.editButton.clicked.connect(self.editButtonAction)
     
 class foodDisplayPanel(QWidget):
     def __init__(self):
@@ -251,7 +256,7 @@ class foodDisplayPanel(QWidget):
                 endItem.setFont(q)
                 self.foodListHolder.hierarcyScroll.addItem(endItem)
                 self.foodListHolder.hierarcyScroll.scrollToBottom()
-                self.populateQTableWidget(dataList,self.foodListHolder.constituentList,headers)                
+                self.populateQTableWidget(dataList,self.foodListHolder.constituentList,headers)              
             case 'foodMix':
                 self.foodDisplayLayout.setCurrentIndex(1)
                 self.foodMixHolder.displayLabel.setText(panelTitle)
@@ -344,3 +349,6 @@ class foodDisplayPanel(QWidget):
         self.foodDict[foodID]
     def deleteButtonAction(self):
         pass
+    def itemClickedReset(self,itemList):
+        itemList.itemClicked.disconnect()
+        itemList.itemClicked.connect(self.tableItemClick_external)
