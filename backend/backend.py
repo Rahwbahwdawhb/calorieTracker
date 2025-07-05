@@ -278,10 +278,17 @@ class mixedFood:
         return [self.kcal,self.protein,self.carbs,self.fat,self.fibers]
     def updateMacros(self):
         self.resetMacros()
-        for qty,constituent in zip(self.constituentQuantities,self.constituents):
+        constituent_indices_to_remove=[]
+        for i,(qty,constituent) in enumerate(zip(self.constituentQuantities,self.constituents)):
             self.quantity+=qty
-            for macroStr,constituent_macro in zip(self.macroStrs,constituent.getMacros()):
-                exec('self.'+macroStr+'+=qty/constituent.quantity*constituent_macro')
+            if constituent.quantity>0:      
+                for macroStr,constituent_macro in zip(self.macroStrs,constituent.getMacros()):
+                    exec('self.'+macroStr+'+=qty/constituent.quantity*constituent_macro')
+            else:
+                constituent_indices_to_remove.append(i)
+        for i in constituent_indices_to_remove:
+            del self.constituents[i]
+            del self.constituentQuantities[i]
     def removeFoodReference(self,foodToRemove):
         if foodToRemove in self.isConstituentOf:
             self.isConstituentOf.remove(foodToRemove)
@@ -302,7 +309,7 @@ class mixedFood:
     def clearConstituents(self):
         for food in self.constituents:
             food.removeFoodReference(self)
-            self.constituents.remove(food)
+        self.constituents.clear()
         self.constituentQuantities.clear()
         self.resetMacros()
             
