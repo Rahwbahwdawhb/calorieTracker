@@ -313,6 +313,112 @@ class mixedFood:
         self.constituentQuantities.clear()
         self.resetMacros()
             
+class meal_holder:
+    def __init__(self,name,locationToSave,allFoodDictionary,constituentOfDictionary):
+        self.meal_dict={}
+        self.tags=[]
+        self.name=name
+        self.allFoodDictionary=allFoodDictionary
+        self.constituentOfDictionary=constituentOfDictionary
+        if locationToSave==None:
+            self.saveLocation=dirname(abspath(__file__))
+        else:
+            self.saveLocation=locationToSave
+    def add_meal(self,meal_name,qtys,food_list):
+        self.meal_dict[meal_name]={'foods':food_list,'quantities':qtys}
+    def add_food_to_meal(self,meal_name,food):
+        try:
+            self.meal_dict[meal_name].append(food)
+        except:
+            print(f"{meal_name} not found in this meal holder")
+    def remove_food_from_meal(self,meal_name,food):
+        try:
+            self.meal_dict[meal_name].remove(food)
+        except:
+            print(f"{meal_name} not found in this meal holder")
+    def add_tag(self,tag):
+        self.tags.append(tag)
+
+
+    def saveToFile(self):
+        with open(join(self.saveLocation,self.name+'.json'),'w') as f:
+            f.write(f"Tags: {self.tags}\n")
+            for meal_name,meal_dict in self.meal_dict.items():                
+                f.write("\n")
+                f.write(f"Meal: {meal_name}\n")
+                for food,qty in zip(meal_dict['foods'],meal_dict['quantities']):
+                    food_=deepcopy(food)
+                    if len(food.isConstituentOf)!=0:
+                        isConstituentOfStr=''
+                        for food__ in food.isConstituentOf:
+                            isConstituentOfStr+=food__.name+','
+                        isConstituentOfStr=isConstituentOfStr[:-1]
+                        food_.isConstituentOf=isConstituentOfStr
+                    else:
+                        food_.isConstituentOf=''
+                    if not hasattr(food_,'constituents'):
+                        foodDict=deepcopy(food_.__dict__)
+                        try:
+                            del foodDict['foodHolder']
+                        except:
+                            pass
+                        dumpStr=dumps(foodDict)
+                    else:
+                        dumpStr=recursiveDump(food_)
+                    f.write(f'{{"quantity": {qty},{dumpStr}}}\n')
+
+    def append_meal_from_file(self,loadFolder,filename):
+        if self.name+'.json'==filename: #read file contents and add to foodList
+            with open(join(loadFolder,self.name+'.json'),'r') as f:
+                tags_meals=f.read().strip().split('\n\n')
+                tags_str=tags_meals[0]
+                tags=tags_str[tags_str.find('[')+1:tags_str.find(']')].split(',')
+                for tag in tags:
+                    self.tags.append(tag)
+                meals=tags_meals[1:]
+                for meal in meals:
+                    meal_name=meal[meal.find(': ')+2:meal.find('\n')]
+                    meal_info_=meal[meal.find('\n')+1:]
+                    food_list=[]
+                    food_list_quantities=[]
+                    for mi in meal_info_.split('}\n{'):
+                        quantity=float(mi[mi.find(':')+1:mi.find(',')])
+                        meal_info=mi[mi.find('{"name"'):]
+                        if meal_info.endswith('}}'):
+                            meal_info=meal_info[:-1]
+                        mealDict=loads(meal_info)
+                        if 'constituents' in mealDict:
+                            newFoodItem=recursiveLoad(meal_info,self.allFoodDictionary,self.constituentOfDictionary)
+                        else:
+                            newFoodItem=newOrExistingFood(mealDict,self.allFoodDictionary)
+                        food_list.append(newFoodItem)
+                        food_list_quantities.append(quantity)
+                    self.add_meal(meal_name,food_list_quantities,food_list)
+
+#backend testing
+afd={}
+cd={}
+m=meal_holder('test',None,afd,cd)
+m.add_tag('tag1')
+m.add_tag('tag2')
+a=foodItem('a')
+b=foodItem('b')
+afd['a']=a
+afd['b']=b
+m.add_meal('ab',[10,20],[a,b])
+mm=mixedFood()
+mm.setName('mm')
+mm.addConstituent(a,30)
+mm.addConstituent(b,40)
+afd['mm']=mm
+cd['a']=[mm]
+cd['b']=[mm]
+m.add_meal('mm',[20],[mm])
+m.saveToFile()
+n=meal_holder('test',None,afd,cd)
+import os
+n.append_meal_from_file(os.path.dirname(__file__),'test.json')
+1
 
 # class foodItem:
 #     def __init__(self,name='',quantity=100,kcal=0,protein=0,carbs=0,fat=0,fibers=None,constituents=[],notes='') -> None:
