@@ -342,8 +342,12 @@ class meal_holder:
 
     def saveToFile(self):
         with open(join(self.saveLocation,self.name+'.json'),'w') as f:
-            f.write(f"Tags: {self.tags}\n")
-            for meal_name,meal_dict in self.meal_dict.items():                
+            tag_str='['
+            for tag in self.tags:
+                tag_str+=f"{tag},"
+            tag_str=f"{tag_str[:-1]}]"
+            f.write(f"Tags: {tag_str}\n")
+            for meal_name,meal_dict in self.meal_dict.items():           
                 f.write("\n")
                 f.write(f"Meal: {meal_name}\n")
                 for food,qty in zip(meal_dict['foods'],meal_dict['quantities']):
@@ -418,6 +422,9 @@ m.saveToFile()
 n=meal_holder('test',None,afd,cd)
 import os
 n.append_meal_from_file(os.path.dirname(__file__),'test.json')
+for k,v in n.__dict__.items():
+    if v!=m.__dict__[k]:
+        print(v,m.__dict__[k])
 1
 
 # class foodItem:
