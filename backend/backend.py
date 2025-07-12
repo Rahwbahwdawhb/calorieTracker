@@ -326,20 +326,26 @@ class meal_holder:
             self.saveLocation=locationToSave
     def add_meal(self,meal_name,qtys,food_list):
         self.meal_dict[meal_name]={'foods':food_list,'quantities':qtys}
-    def add_food_to_meal(self,meal_name,food):
+    def add_food_to_meal(self,meal_name,food,qty):
         try:
-            self.meal_dict[meal_name].append(food)
+            self.meal_dict[meal_name]['foods'].append(food)
+            self.meal_dict[meal_name]['quantities'].append(qty)
         except:
             print(f"{meal_name} not found in this meal holder")
+    def update_food_qty(self,meal_name,food,qty):
+        try:
+            food_index = self.meal_dict[meal_name]['foods'].index(food)
+            if qty == 0:
+                del self.meal_dict[meal_name]['foods'][food_index]
+                del self.meal_dict[meal_name]['quantities'][food_index]
+            else:
+                self.meal_dict[meal_name]['quantities'][food_index] = qty
+        except Exception as e:
+            print(e)
     def remove_food_from_meal(self,meal_name,food):
-        try:
-            self.meal_dict[meal_name].remove(food)
-        except:
-            print(f"{meal_name} not found in this meal holder")
+        self.update_food_qty(meal_name,food,0)
     def add_tag(self,tag):
         self.tags.append(tag)
-
-
     def saveToFile(self):
         with open(join(self.saveLocation,self.name+'.json'),'w') as f:
             tag_str='['
@@ -425,8 +431,15 @@ n.append_meal_from_file(os.path.dirname(__file__),'test.json')
 for k,v in n.__dict__.items():
     if v!=m.__dict__[k]:
         print(v,m.__dict__[k])
-1
-
+print(m.meal_dict)
+m.add_food_to_meal('mm',a,10)
+print(m.meal_dict)
+m.update_food_qty('mm',a,15)
+print(m.meal_dict)
+m.update_food_qty('mm',a,0)
+print(m.meal_dict)
+m.remove_food_from_meal('mm',mm)
+print(m.meal_dict)
 # class foodItem:
 #     def __init__(self,name='',quantity=100,kcal=0,protein=0,carbs=0,fat=0,fibers=None,constituents=[],notes='') -> None:
 #         self.name=name
