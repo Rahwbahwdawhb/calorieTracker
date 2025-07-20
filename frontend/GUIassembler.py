@@ -10,11 +10,13 @@ if __name__=='__main__':
     from foodContainerPanel import *
     from addFoodPanel import *
     from mixFoodPanel import *
+    from mealHolderPanel import *
 else:
     from .aidFunctionality import *
     from .foodContainerPanel import *
     from .addFoodPanel import *
     from .mixFoodPanel import *
+    from .mealHolderPanel import *
 
 
 class mainWindow(QWidget):
@@ -35,15 +37,22 @@ class mainWindow(QWidget):
         self.mixFoodButton.clicked.connect(self.panelToggler)
         self.foodContainerButton=QPushButton('Food containers')
         self.foodContainerButton.clicked.connect(self.panelToggler)
+
         buttonLayout=QVBoxLayout()
         buttonLayout.addWidget(self.addFoodButton)
         buttonLayout.addWidget(self.mixFoodButton)
         buttonLayout.addWidget(self.foodContainerButton)
 
+        self.mealHolderPanel=mealHolderPanel()
+        self.groupMealButton=QPushButton('Add meal group')
+        self.groupMealButton.clicked.connect(self.panelToggler)
+        buttonLayout.addWidget(self.groupMealButton)
+
         mainLayout.addLayout(buttonLayout,0,0,1,1)
         mainLayout.addWidget(self.addFoodPanel,0,1,3,3)
         mainLayout.addWidget(self.mixFoodPanel,0,1,3,3)
         mainLayout.addWidget(self.foodContainerPanel,0,1,3,3)
+        mainLayout.addWidget(self.mealHolderPanel,0,1,3,3)
         mainLayout.setColumnStretch(0,1)
         mainLayout.setColumnStretch(1,3)
 
@@ -62,6 +71,7 @@ class mainWindow(QWidget):
             self.addFoodPanel.addFoodActivation()
             self.mixFoodPanel.hide()
             self.foodContainerPanel.hide()
+            self.mealHolderPanel.hide()
         elif self.sender()==self.mixFoodButton:
             self.addFoodPanel.hide()
             self.mixFoodPanel.show()
@@ -69,9 +79,19 @@ class mainWindow(QWidget):
             self.mixFoodPanel.addFoodActivation()
             self.mixFoodPanel.populateFoods()
             self.foodContainerPanel.hide()
+            self.mealHolderPanel.hide()
+        elif self.sender()==self.groupMealButton:
+            self.mealHolderPanel.show()
+            # self.mealHolderPanel.populateFoodContainers()
+            # self.mealHolderPanel.addFoodActivation()
+            # self.mealHolderPanel.populateFoods()
+            self.addFoodPanel.hide()
+            self.mixFoodPanel.hide()
+            self.foodContainerPanel.hide()
         else:
             self.addFoodPanel.hide()
             self.mixFoodPanel.hide()
+            self.mealHolderPanel.hide()
             self.foodContainerPanel.show()
             self.foodContainerPanelUpdate()
 
