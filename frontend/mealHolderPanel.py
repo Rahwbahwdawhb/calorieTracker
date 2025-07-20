@@ -77,6 +77,7 @@ class mealHolderPanel(QWidget):
         super().__init__()
 
         self.meal_tables={}
+        self.tags=set()
 
         quantityLayout=QGridLayout()        
         self.nameEntry=searchField('Name:',0)
@@ -125,6 +126,22 @@ class mealHolderPanel(QWidget):
         add_meal_layout.addWidget(self.add_meal_name)
         topWrapLayout.addLayout(add_meal_layout,8,0)
 
+        tag_layout=QHBoxLayout()
+        self.add_tag_button=QPushButton('Add tag')
+        self.add_tag_button.clicked.connect(self.add_tag)
+        self.add_tag_name=QLineEdit()
+        self.tag_scoll=QScrollArea()
+        self.tag_scoll.setWidgetResizable(True)
+        self.tag_scoll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.container2=QWidget()
+        self.tag_scroll_layout=QHBoxLayout()
+        self.container2.setLayout(self.tag_scroll_layout)
+        self.tag_scoll.setWidget(self.container2)
+        tag_layout.addWidget(self.add_tag_button)
+        tag_layout.addWidget(self.add_tag_name)
+        tag_layout.addWidget(self.tag_scoll)
+        topWrapLayout.addLayout(tag_layout,9,0)
+
         mixPanelLayout=QGridLayout()
         mixPanelLayout.addLayout(topWrapLayout,0,0)
         mixPanelLayout.setRowStretch(0,10)
@@ -156,7 +173,31 @@ class mealHolderPanel(QWidget):
             self.container.adjustSize()
             QTimer.singleShot(0, lambda: self.ingridientScroll.verticalScrollBar().setValue(
             self.ingridientScroll.verticalScrollBar().maximum()))
-
+    def add_tag(self):
+        tag_name=self.add_tag_name.text()
+        if tag_name not in self.tags:
+            tag_widget=QWidget()
+            def remove_tag():
+                self.tags.remove(tag_name)
+                self.tag_scroll_layout.removeWidget(tag_widget)
+                tag_widget.setParent(None)
+                tag_widget.deleteLater()
+            self.add_tag_name.setText('')
+            self.tags.add(tag_name)
+            tag_remove_button=QPushButton('x')
+            tag_remove_button.clicked.connect(remove_tag)
+            tag_widget_layout=QHBoxLayout()
+            tag_widget.setLayout(tag_widget_layout)
+            tag_widget_layout.addWidget(tag_remove_button)
+            tag_widget_layout.addWidget(QLabel(tag_name))
+            tag_widget_layout.setSpacing(2)
+            tag_remove_button.setStyleSheet("padding: 0px; margin: 0px;")
+            tag_remove_button.setFixedSize(tag_remove_button.sizeHint())
+            self.tag_scroll_layout.addWidget(tag_widget)
+            self.container2.adjustSize()
+            self.container2.updateGeometry()
+            QTimer.singleShot(0, lambda: self.tag_scoll.horizontalScrollBar().setValue(
+            self.tag_scoll.horizontalScrollBar().maximum()))
 if __name__ == '__main__':
     app = QApplication([])
     # window = dynamicTable()
